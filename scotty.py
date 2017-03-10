@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import scotty
+import scotty.cli
 
 if __name__ == '__main__':
-    scotty.cli()
+    scotty.cli.main()
