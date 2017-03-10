@@ -1,4 +1,5 @@
 import logging
+import sys
 
 COMMAND = 'legacy'
 
@@ -16,4 +17,12 @@ def setup_parser(parent_parser):
         required = True) 
 
 def run(args):
-    logging.info('run legacy script for {}'.format(args.getargs().pipeline))
+    logging.info('run legacy scripts')
+    pipeline = args.getargs().pipeline
+    getattr(sys.modules[__name__], pipeline)(args)
+
+def experiment(args):
+    logging.info('run experiment')
+
+def workload_generator(args):
+    logging.info('run workload_generator')
