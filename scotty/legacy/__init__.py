@@ -10,9 +10,10 @@ def setup_parser(parent_parser):
     parser.add_argument(
         '-p', '-pipeline',
         help = 'Executed pipeline',
+        dest = 'pipeline',
         choices = ['experiment', 'workload_generator'],
         action = 'store',
         required = True) 
 
-def run( args):
-    logging.info('run legacy script')
+def run(args):
+    logging.info('run legacy script for {}'.format(args.getargs().pipeline))
