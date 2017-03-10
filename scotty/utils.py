@@ -19,4 +19,4 @@ class Args:
         return self.__args
 
     def exec_command(self):
-        self.__commands[self.__args.command].run(self.__args)
+        self.__commands[self.__args.command].run(self)
