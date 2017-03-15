@@ -5,6 +5,8 @@ import yaml
 import git
 import subprocess
 
+import scotty.utils as utils
+
 LOG = logging.getLogger(__name__)
 
 class Workflow(object):
@@ -18,12 +20,18 @@ class Workflow(object):
 	self._workload_run()
 
     def _checkout(self):
-        # TODO run gerrit-git-prep.sh from shell
+        # TODO load environmet variables
         LOG.info('Checkout experiment')
-        self._experiment = Experiment(self._args.getargs().experiment_path)        
-        source = 'gerrit bla'
-        LOG.info('    source: {}'.format(source))
-        LOG.info('    target: {}'.format(self._experiment.path))
+        workspace = os.path.abspath(self._args.getargs().workspace)
+        project = 'experiment/ycsb_mongo'
+        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        zuul_url = 'http://zuul.ci.mikelangelo.gwdg.de/p/'
+        zuul_ref = 'refs/zuul/master/Z1af6a3d986fc4c4fa8f183620c66cfd7'
+        self._experiment = Experiment(workspace, project)        
+        LOG.info('    project: {}'.format(self._experiment.project))
+        LOG.info('    source: {}'.format(gerrit_url + self._experiment.project))
+        LOG.info('    workspace: {}'.format(self._experiment.workspace))
+        self._experiment.checkout(gerrit_url, zuul_url, zuul_ref)
  
     def _load_experiment(self):
         LOG.info('Load experiment')
@@ -34,7 +42,8 @@ class Workflow(object):
         LOG.info('Split experiment into workloads')
         self._experiment.split()
         for name, workload in self._experiment.iter_workloads():
-            source = 'https://gerrit/p/workload_gen/' + workload.generator
+            source = utils.Config().get('gerrit', 'host') 
+	    source+= '/p/workload_gen/' + workload.generator
             LOG.info('    workload: {}'.format(name))
             LOG.info('    source: {}'.format(source))
             LOG.info('    target: {}'.format(workload.path))
@@ -46,19 +55,19 @@ class Workflow(object):
             workload.save()
 
     def _workload_run(self):
-        # TODO run all workloads in experiment
         LOG.info('Run experiment workloads')
         for name, workload in self._experiment.iter_workloads():
             LOG.info('    run {}'.format(name))
-            workload.run(self._experiment.path)
+            workload.run(self._experiment.workspace)
 
 class Experiment(object):
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, workspace, project):
+        self.project = project
+        self.workspace = workspace
         self.config = {}
-        self.config_path = os.path.abspath(path + '/experiment.yaml')
+        self.config_path = os.path.abspath(workspace + '/experiment.yaml')
         self.workloads = {}
-        self.workloads_path = os.path.abspath(path + '/.workloads/')
+        self.workloads_path = os.path.abspath(workspace + '/.workloads/')
 
     def load(self):
         try:
@@ -75,6 +84,29 @@ class Experiment(object):
             name = workload['workload']['name']
             path = os.path.normpath(self.workloads_path + '/' + name)
             self.workloads[name] = Workload(path, workload)
+ 
+    def checkout(self, gerrit_url, zuul_url, zuul_ref):
+        # TODO implement timed git to have an timeout
+        # TODO try again after timeout
+        g = git.cmd.Git(self.workspace)
+        if not os.path.isdir(self.workspace + '/.git'):
+            g.clone(gerrit_url + self.project, '.')
+        g.remote('set-url', 'origin', gerrit_url + self.project)
+        g.remote('update') # TODO if faild make git gc and try again
+        g.reset('--hard')
+        g.clean('-x', '-f', '-d', '-q') # TODO try again with sleep one if failed
+        if zuul_ref.startswith("refs/tags"):
+            # TODO checkout tag
+            raise Exception('Not Implemented')
+        else:
+            g.fetch(zuul_url + self.project, zuul_ref)    
+            g.checkout('FETCH_HEAD')
+            g.reset('--hard', 'FETCH_HEAD')
+        g.clean('-x', '-f', '-d', '-q') # TODO try again with sleep one if failed
+        if os.path.isfile(self.workspace + '/.gitmodules'):
+           g.submodule('init')
+           g.submodule('sync')
+           g.submodule('update', '--init')
 
     def count_workloads(self):
         return len(self.config)

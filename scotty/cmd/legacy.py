@@ -14,9 +14,9 @@ def setup_parser(parser):
         dest = 'pipeline')
     exp_parser = subparser.add_parser('experiment')
     exp_parser.add_argument(
-        '-e', '--experiment_path',
-        help = 'Path to experiment',
-        dest = 'experiment_path',
+        '-w', '--workspace',
+        help = 'Path to experiment workspace',
+        dest = 'workspace',
         action = 'store',
         required = True)
     wl_gen_parser = subparser.add_parser('workload_generator')
