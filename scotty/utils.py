@@ -11,7 +11,14 @@ class Args(object):
     def _setup(self):
         self._parser = argparse.ArgumentParser()
         for key, command in scotty.cli.iter_commands():
-            command.setup_parser(self._parser)
+	    self._setup_command(command)
+     
+    def _setup_command(self, command):
+        subparser = self._parser.add_subparsers(
+	    help = command.HELP,
+            dest = 'command')
+        cmd_parser = subparser.add_parser(command.COMMAND)
+        command.setup_parser(cmd_parser)
             
     def getargs(self):
         return self._args
