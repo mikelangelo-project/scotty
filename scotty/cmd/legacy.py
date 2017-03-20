@@ -8,6 +8,8 @@ import scotty.legacy.experiment
 COMMAND = 'legacy'
 HELP = 'Run legacy scrips'
 
+LOG = logging.getLogger(__name__)
+
 def setup_parser(parser):
     subparser = parser.add_subparsers(
         help = 'dgshsh',
@@ -40,7 +42,7 @@ def setup_parser(parser):
         action = 'store_true')
 
 def main(args):
-    logging.info('run legacy scripts')
+    LOG.info('run legacy scripts')
     pipeline = args.getargs().pipeline
     getattr(sys.modules[__name__], pipeline)(args)
 
