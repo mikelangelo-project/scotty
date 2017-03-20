@@ -56,6 +56,9 @@ class Workflow(object):
 
     def _workload_run(self):
         LOG.info('Run experiment workloads')
+        if self._args.getargs().not_run:
+            LOG.info('    found option --not-run (-n): skip run workloads')
+            return    
         for name, workload in self._experiment.iter_workloads():
             LOG.info('    run {}'.format(name))
             workload.run(self._experiment.workspace)
