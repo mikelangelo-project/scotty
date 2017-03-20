@@ -29,9 +29,9 @@ def setup_parser(parser):
         action = 'store_true')
     wl_gen_parser = subparser.add_parser('workload_generator')
     wl_gen_parser.add_argument(
-        '-w', '--workload_path',
-        help = 'Path to workload',
-        dest = 'workload_path',
+        '-w', '--workspace',
+        help = 'Path to workload workspace',
+        dest = 'workspace',
         action = 'store',
         required = True)
     wl_gen_parser.add_argument(
