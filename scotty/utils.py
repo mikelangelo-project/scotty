@@ -85,6 +85,8 @@ def setup_logging():
 
     logging.getLogger().setLevel(log_level.upper())
     file_handler = logging.FileHandler(log_dir + '/' + log_file)
+    file_handler.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(file_handler)
     stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(stream_handler)
