@@ -30,6 +30,9 @@ class Args(object):
 
 class Config(object):
     class __Config:
+        _raw_config = {
+            'DEFAULT' : {
+                'log_format' : True}}
         def __init__(self):
             script_dir = os.path.dirname(os.path.realpath(__file__))
             self._base_dir = self._find_base_dir()
@@ -56,9 +59,13 @@ class Config(object):
             if not os.path.isabs(path):
                 path = os.path.normpath(self._base_dir + '/'+ path)
             return path
+ 
+        def _is_raw(self, section, option):
+            if section in self._raw_config:
+                return self._raw_config[section].get(option, False)
 
         def get(self, section, option, abspath=False):
-            value = self._config.get(section, option)
+            value = self._config.get(section, option, self._is_raw(section, option))
             if abspath: value = self._abspath(value)
             return value 
 
@@ -69,3 +76,16 @@ class Config(object):
 
     def __getattr__(self, name):
         return getattr(self.instance, name)
+
+def setup_logging():
+    log_dir    = Config().get('DEFAULT', 'log_dir', True)
+    log_file   = Config().get('DEFAULT', 'log_file')
+    log_format = Config().get('DEFAULT', 'log_format')
+    log_level  = Config().get('DEFAULT', 'log_level')
+
+    logging.getLogger().setLevel(log_level.upper())
+    logging.info('{}'.format(log_dir + '/' + log_file))
+    file_handler = logging.FileHandler(log_dir + '/' + log_file)
+    logging.getLogger().addHandler(file_handler)
+    stream_handler = logging.StreamHandler()
+    logging.getLogger().addHandler(stream_handler)
