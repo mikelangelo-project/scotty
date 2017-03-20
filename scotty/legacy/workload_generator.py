@@ -16,13 +16,16 @@ class Workflow(object):
         self._workload_run()
  
     def _checkout(self):
-        # TODO load environment variables
         LOG.info('Checkout workload')
         workspace = os.path.abspath(self._args.getargs().workspace)
-        project = 'workload_gen/ycsb_mongodb'
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
-        zuul_url = 'http://zuul.ci.mikelangelo.gwdg.de/p/'
-	zuul_ref = 'refs/zuul/master/Zf4509a7f11df4f0da83f3700685f39f3'
+        try:
+            project  = os.environ['ZUUL_PROJECT']
+            zuul_url = os.environ['ZUUL_URL']
+            zuul_ref = os.environ['ZUUL_REF']
+        except KeyError as e:
+            LOG.error('Missing environment key ({})'.format(e))
+            sys.exit(-1)
         self._workload = Workload(workspace, project)
         LOG.info('    project: {}'.format(self._workload.project))
         LOG.info('    source: {}'.format(gerrit_url + self._workload.project))
