@@ -2,6 +2,7 @@ import logging
 import os
 import git
 import subprocess
+import sys
 
 import scotty.utils as utils
 
@@ -17,6 +18,12 @@ class Workflow(object):
  
     def _checkout(self):
         LOG.info('Checkout workload')
+        if self._args.getargs().skip_checkout:
+            LOG.info('    found option --skip-checkout (-s): skip checkout workload')
+            workspace = os.path.abspath(self._args.getargs().workspace)
+            self._workload = Workload(workspace, '__dummy__')
+            LOG.info('    workspace: {}'.format(self._workload.workspace))
+            return
         workspace = os.path.abspath(self._args.getargs().workspace)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         try:

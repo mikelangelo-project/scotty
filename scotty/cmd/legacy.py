@@ -40,6 +40,12 @@ def setup_parser(parser):
         dest = 'not_run',
         default = False,
         action = 'store_true')
+    wl_gen_parser.add_argument(
+        '-s', '--skip-checkout',
+        help = 'Do not checkout workload',
+        dest = 'skip_checkout',
+        default = False,
+        action = 'store_true')
 
 def main(args):
     LOG.info('run legacy scripts')
