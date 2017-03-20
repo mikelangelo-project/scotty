@@ -84,7 +84,6 @@ def setup_logging():
     log_level  = Config().get('DEFAULT', 'log_level')
 
     logging.getLogger().setLevel(log_level.upper())
-    logging.info('{}'.format(log_dir + '/' + log_file))
     file_handler = logging.FileHandler(log_dir + '/' + log_file)
     logging.getLogger().addHandler(file_handler)
     stream_handler = logging.StreamHandler()
