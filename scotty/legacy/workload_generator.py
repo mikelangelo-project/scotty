@@ -45,7 +45,6 @@ class Workload(object):
         self.project = project
         self.workspace = workspace
         self.config = {}
-        self.config_path = os.path.abspath(workspace + 'test/workload.yaml')
         
     def load(self):
         try:
@@ -79,9 +78,15 @@ class Workload(object):
            g.submodule('update', '--init')
 
     def run(self, data_path):
-        # TODO test if samples or test exist
+        workload_path = self.workspace + '/test'
+        if not os.path.isdir(workload_path):
+            workload_path = self.workspace + '/samples'
+        if os.path.isfile(workload_path + '/workload.yaml'):
+            workload_path += '/workload.yaml'
+        else:
+            workload_path += '/workload.yml'
         subprocess.check_call([
              './run.py',
-             '-w', self.workspace + '/samples/workload.yaml',
+             '-w', workload_path,
              '-d', data_path],
              cwd=self.workspace)
