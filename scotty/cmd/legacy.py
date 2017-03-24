@@ -1,59 +1,72 @@
-import logging
-import sys
-import os
-
+from scotty.cmd.base import CommandParser
+from scotty.cmd.base import CommandBuilder
+from scotty.cmd.base import CommandRegistry
 import scotty.legacy.workload_generator
 import scotty.legacy.experiment
 
-COMMAND = 'legacy'
-HELP = 'Run legacy scrips'
 
-LOG = logging.getLogger(__name__)
+@CommandRegistry.addparser
+class LegacyParser(CommandParser):
+    def add_arguments(self, parser):
+        subparser = parser.add_subparsers(
+            help='Pipeline',
+            dest='pipeline')
+        ExperimentParser().add_arguments(
+            subparser.add_parser('experiment'))
+        WorkloadParser().add_arguments(
+            subparser.add_parser('workload_generator'))
 
-def setup_parser(parser):
-    subparser = parser.add_subparsers(
-        help = 'dgshsh',
-        dest = 'pipeline')
-    exp_parser = subparser.add_parser('experiment')
-    exp_parser.add_argument(
-        '-w', '--workspace',
-        help = 'Path to experiment workspace',
-        dest = 'workspace',
-        action = 'store',
-        required = True)
-    exp_parser.add_argument(
-        '-n', '--not-run',
-        help = 'Do not run workloads',
-        dest = 'not_run',
-        default = False,
-        action = 'store_true')
-    wl_gen_parser = subparser.add_parser('workload_generator')
-    wl_gen_parser.add_argument(
-        '-w', '--workspace',
-        help = 'Path to workload workspace',
-        dest = 'workspace',
-        action = 'store',
-        required = True)
-    wl_gen_parser.add_argument(
-        '-n', '--not-run',
-        help = 'Do not run workload',
-        dest = 'not_run',
-        default = False,
-        action = 'store_true')
-    wl_gen_parser.add_argument(
-        '-s', '--skip-checkout',
-        help = 'Do not checkout workload',
-        dest = 'skip_checkout',
-        default = False,
-        action = 'store_true')
 
-def main(args):
-    LOG.info('run legacy scripts')
-    pipeline = args.getargs().pipeline
-    getattr(sys.modules[__name__], pipeline)(args)
+class ExperimentParser(CommandParser):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-w', '--workspace',
+            help='Path to experiment workspace',
+            dest='workspace',
+            action='store',
+            required=True)
+        parser.add_argument(
+            '-n', '--not-run',
+            help='Do not run workloads',
+            dest='not_run',
+            default=False,
+            action='store_true')
 
-def experiment(args):
-    scotty.legacy.experiment.Workflow(args).run()
 
-def workload_generator(args):
-    scotty.legacy.workload_generator.Workflow(args).run()
+class WorkloadParser(CommandParser):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-w', '--workspace',
+            help='Path to workload workspace',
+            dest='workspace',
+            action='store',
+            required=True)
+        parser.add_argument(
+            '-n', '--not-run',
+            help='Do not run workload',
+            dest='not_run',
+            default=False,
+            action='store_true')
+        parser.add_argument(
+            '-s', '--skip-checkout',
+            help='Do not checkout workload',
+            dest='skip_checkout',
+            default=False,
+            action='store_true')
+
+
+class Command(object):
+    def __init__(self, options):
+        self.options = options
+
+    def execute(self):
+        if 'experiment' in self.options.pipeline:
+            workflow = scotty.legacy.experiment.Workflow(self.options)
+        elif 'workload_generator' in self.options.pipeline:
+            workflow = scotty.legacy.workload_generator.Workflow(self.options)
+        workflow.run()
+
+
+@CommandRegistry.addbuilder
+class CommandBuilder(CommandBuilder):
+    command_class = Command

@@ -2,4 +2,4 @@
 import scotty.cli
 
 if __name__ == '__main__':
-    scotty.cli.main()
+    scotty.cli.run()

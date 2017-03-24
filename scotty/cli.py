@@ -1,14 +1,33 @@
 import sys
+import argparse
 
-import scotty.utils
-import scotty.cmd.legacy as cmd_legacy
+from scotty.cmd.base import CommandRegistry
+import scotty.cmd.legacy
 
-COMMANDS = {
-    cmd_legacy.COMMAND : cmd_legacy}
 
-def main():
-    args = scotty.utils.Args(sys.argv[1:])
-    args.exec_command()
+class Cli(object):
 
-def iter_commands():
-    return COMMANDS.iteritems()
+    def parse_command(self):
+        parser = argparse.ArgumentParser()
+        subparser = parser.add_subparsers(dest='command')
+        for key in CommandRegistry.registry:
+            subparser.add_parser(key)
+        options = parser.parse_args(sys.argv[1:2])
+        self.command_builder = CommandRegistry.getbuilder(options.command)
+        self.command_parser = CommandRegistry.getparser(options.command)
+
+    def parse_command_options(self):
+        parser = argparse.ArgumentParser()
+        self.command_parser.add_arguments(parser)
+        self.options = parser.parse_args(sys.argv[2:])
+
+    def execute_command(self):
+        cmd = self.command_builder.buildCommand(self.options)
+        cmd.execute()
+
+
+def run():
+    cli = Cli()
+    cli.parse_command()
+    cli.parse_command_options()
+    cli.execute_command()
