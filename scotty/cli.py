@@ -3,6 +3,7 @@ import argparse
 
 from scotty.cmd.base import CommandRegistry
 import scotty.cmd.legacy
+import scotty.cmd.workload
 
 
 class Cli(object):
