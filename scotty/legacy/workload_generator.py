@@ -9,8 +9,8 @@ import scotty.utils as utils
 LOG = logging.getLogger(__name__)
 
 class Workflow(object):
-    def __init__(self, args):
-        self._args = args
+    def __init__(self, options):
+        self._options = options
 
     def run(self):
         self._checkout()
@@ -18,13 +18,13 @@ class Workflow(object):
  
     def _checkout(self):
         LOG.info('Checkout workload')
-        if self._args.getargs().skip_checkout:
+        if self._options.skip_checkout:
             LOG.info('    found option --skip-checkout (-s): skip checkout workload')
-            workspace = os.path.abspath(self._args.getargs().workspace)
+            workspace = os.path.abspath(self._options.workspace)
             self._workload = Workload(workspace, '__dummy__')
             LOG.info('    workspace: {}'.format(self._workload.workspace))
             return
-        workspace = os.path.abspath(self._args.getargs().workspace)
+        workspace = os.path.abspath(self._options.workspace)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         try:
             project  = os.environ['ZUUL_PROJECT']
@@ -42,7 +42,7 @@ class Workflow(object):
     def _workload_run(self):
         # TODO run workload  
         LOG.info('Run workload') 
-        if self._args.getargs().not_run:
+        if self._options.not_run:
             LOG.info('    found option --not-run (-n): skip run workload')
             return
         self._workload.run(self._workload.workspace)
