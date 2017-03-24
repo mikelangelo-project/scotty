@@ -1,10 +1,14 @@
+import logging
 import os.path
+
+import yaml
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandBuilder
 from scotty.cmd.base import CommandRegistry
 from scotty import workload
 
+logger = logging.getLogger(__name__)
 
 @CommandRegistry.addparser
 class WorkloadParser(CommandParser):
@@ -43,20 +47,49 @@ class Command(object):
         self.options = options
 
     def execute(self):
-        # TODO checkout out the workload
-        # TODO implement skipping the checkout
         if self.options.action == 'run':
-            workspace = self.options.workspace
-            workspace_abs = os.path.abspath(workspace)
-            print 'running the workload in {workspace}'.format(workspace=workspace_abs)
-            # TODO clean the path
-            workload_path = workspace_abs + '/' + 'workload_gen.py'
-            # TODO name
-            workload_ = workload.WorkloadLoader.load_by_path(workload_path)
-            if not self.options.mock:
-                # TODO Create context
-                context = {}
-                workload_.run(context)
+            self._checkout_workload()
+            self._run_workload()
+
+    # TODO implement
+    def _checkout_workload(self):
+        logging.info('Checking out workload')
+        pass
+        logging.info('Checkout done')
+    
+    def _run_workload(self):
+        workload_path = self._get_workload_path()
+        logger.info('running the workload in {workspace}'.format(workspace=workload_path))
+        workload_conf = self._load_workload_conf()
+        workload_name = workload_conf['workload']['name']
+        workload_ = workload.WorkloadLoader.load_by_path(workload_path, workload_name)
+        if not self.options.mock:
+            context = {'workload_conf': workload_conf}
+            workload_.run(context)
+
+    def _get_workload_path(self):
+        workspace_path = self._get_workspace_path()
+        workload_path = workspace_path + '/' + 'workload_gen.py'
+        return workload_path
+
+    def _get_workspace_path(self):
+        workspace = self.options.workspace
+        workspace_abs = os.path.abspath(workspace)
+        return workspace_abs
+
+    def _load_workload_conf(self):
+        conf_path = self._get_conf_path()
+        logging.info('loading workload conf: {}'.format(conf_path))
+        conf = None
+        with open(conf_path, 'r') as conf_file:
+            conf = yaml.load(conf_file)
+        logging.info(conf)
+        return conf
+
+    def _get_conf_path(self):
+        workspace_path = self._get_workspace_path()
+        conf_path = workspace_path + '/' + 'workload.yaml'
+        return conf_path
 
 
 @CommandRegistry.addbuilder
