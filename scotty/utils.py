@@ -1,19 +1,17 @@
-import argparse
 import logging
 import os
 import ConfigParser
 
-import scotty
 
 class Config(object):
     class __Config:
         _raw_config = {
-            'DEFAULT' : {
-                'log_format' : True}}
+            'DEFAULT': {
+                'log_format': True}}
+
         def __init__(self):
-            script_dir = os.path.dirname(os.path.realpath(__file__))
             self._base_dir = self._find_base_dir()
-            self._path =  os.path.normpath(self._base_dir + '/scotty.conf')
+            self._path = os.path.normpath(self._base_dir + '/scotty.conf')
             self._load()
 
         def _find_base_dir(self):
@@ -26,7 +24,9 @@ class Config(object):
                 if os.path.isfile(config_path):
                     return base_dir
                 else:
-                    raise Exception('Found no configuration for scotty (/etc/scotty/scotty.conf or ./python-scotty/etc/scotty.conf)')
+                    raise Exception('Found no configuration for scotty' +
+                                    '(/etc/scotty/scotty.conf or' +
+                                    './python-scotty/etc/scotty.conf)')
 
         def _load(self):
             self._config = ConfigParser.ConfigParser()
@@ -34,19 +34,23 @@ class Config(object):
 
         def _abspath(self, path):
             if not os.path.isabs(path):
-                path = os.path.normpath(self._base_dir + '/'+ path)
+                path = os.path.normpath(self._base_dir + '/' + path)
             return path
- 
+
         def _is_raw(self, section, option):
             if section in self._raw_config:
                 return self._raw_config[section].get(option, False)
 
         def get(self, section, option, abspath=False):
-            value = self._config.get(section, option, self._is_raw(section, option))
-            if abspath: value = self._abspath(value)
-            return value 
+            value = self._config.get(section,
+                                     option,
+                                     self._is_raw(section, option))
+            if abspath:
+                value = self._abspath(value)
+            return value
 
     instance = None
+
     def __init__(self):
         if not Config.instance:
             Config.instance = Config.__Config()
@@ -54,11 +58,12 @@ class Config(object):
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
+
 def setup_logging():
-    log_dir    = Config().get('DEFAULT', 'log_dir', True)
-    log_file   = Config().get('DEFAULT', 'log_file')
+    log_dir = Config().get('DEFAULT', 'log_dir', True)
+    log_file = Config().get('DEFAULT', 'log_file')
     log_format = Config().get('DEFAULT', 'log_format')
-    log_level  = Config().get('DEFAULT', 'log_level')
+    log_level = Config().get('DEFAULT', 'log_level')
 
     logging.getLogger().setLevel(log_level.upper())
     file_handler = logging.FileHandler(log_dir + '/' + log_file)

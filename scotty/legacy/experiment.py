@@ -9,33 +9,34 @@ import scotty.utils as utils
 
 LOG = logging.getLogger(__name__)
 
+
 class Workflow(object):
     def __init__(self, options):
-        self._options = options   
+        self._options = options
 
     def run(self):
         self._checkout()
         self._load_experiment()
-  	self._split_experiment()
-	self._workload_run()
+        self._split_experiment()
+        self._workload_run()
 
     def _checkout(self):
         LOG.info('Checkout experiment')
         workspace = os.path.abspath(self._options.workspace)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         try:
-            project  = os.environ['ZUUL_PROJECT']
+            project = os.environ['ZUUL_PROJECT']
             zuul_url = os.environ['ZUUL_URL']
             zuul_ref = os.environ['ZUUL_REF']
         except KeyError as e:
             LOG.error('Missing environment key ({})'.format(e))
             sys.exit(-1)
-        self._experiment = Experiment(workspace, project)        
+        self._experiment = Experiment(workspace, project)
         LOG.info('    project: {}'.format(self._experiment.project))
         LOG.info('    source: {}'.format(gerrit_url + self._experiment.project))
         LOG.info('    workspace: {}'.format(self._experiment.workspace))
         self._experiment.checkout(gerrit_url, zuul_url, zuul_ref)
- 
+
     def _load_experiment(self):
         LOG.info('Load experiment')
         self._experiment.load()
@@ -45,8 +46,8 @@ class Workflow(object):
         LOG.info('Split experiment into workloads')
         self._experiment.split()
         for name, workload in self._experiment.iter_workloads():
-            source = utils.Config().get('gerrit', 'host') 
-	    source+= '/p/workload_gen/' + workload.generator
+            source = utils.Config().get('gerrit', 'host')
+            source += '/p/workload_gen/' + workload.generator
             LOG.info('    workload: {}'.format(name))
             LOG.info('    source: {}'.format(source))
             LOG.info('    target: {}'.format(workload.path))
@@ -54,17 +55,18 @@ class Workflow(object):
                 LOG.info('    clone new workload')
             else:
                 LOG.info('    pull existing workload')
-	    LOG.info('    write {}'.format(workload.definition_path))
+                LOG.info('    write {}'.format(workload.definition_path))
             workload.save()
 
     def _workload_run(self):
         LOG.info('Run experiment workloads')
         if self._options.not_run:
             LOG.info('    found option --not-run (-n): skip run workloads')
-            return    
+            return
         for name, workload in self._experiment.iter_workloads():
             LOG.info('    run {}'.format(name))
             workload.run(self._experiment.workspace)
+
 
 class Experiment(object):
     def __init__(self, workspace, project):
@@ -82,7 +84,7 @@ class Experiment(object):
         except IOError, e:
             LOG.error('{}'.format(e))
             sys.exit(-1)
-  
+
     def split(self):
         if not os.path.isdir(self.workloads_path):
             os.mkdir(self.workloads_path)
@@ -90,7 +92,7 @@ class Experiment(object):
             name = workload['workload']['name']
             path = os.path.normpath(self.workloads_path + '/' + name)
             self.workloads[name] = Workload(path, workload)
- 
+
     def checkout(self, gerrit_url, zuul_url, zuul_ref):
         # TODO implement timed git to have an timeout
         # TODO try again after timeout
@@ -98,27 +100,28 @@ class Experiment(object):
         if not os.path.isdir(self.workspace + '/.git'):
             g.clone(gerrit_url + self.project, '.')
         g.remote('set-url', 'origin', gerrit_url + self.project)
-        g.remote('update') # TODO if faild make git gc and try again
+        g.remote('update')  # TODO if faild make git gc and try again
         g.reset('--hard')
-        g.clean('-x', '-f', '-d', '-q') # TODO try again with sleep one if failed
+        g.clean('-x', '-f', '-d', '-q')  # TODO try again one fail
         if zuul_ref.startswith("refs/tags"):
             # TODO checkout tag
             raise Exception('Not Implemented')
         else:
-            g.fetch(zuul_url + self.project, zuul_ref)    
+            g.fetch(zuul_url + self.project, zuul_ref)
             g.checkout('FETCH_HEAD')
             g.reset('--hard', 'FETCH_HEAD')
-        g.clean('-x', '-f', '-d', '-q') # TODO try again with sleep one if failed
+        g.clean('-x', '-f', '-d', '-q')  # TODO try again one if fail
         if os.path.isfile(self.workspace + '/.gitmodules'):
-           g.submodule('init')
-           g.submodule('sync')
-           g.submodule('update', '--init')
+            g.submodule('init')
+            g.submodule('sync')
+            g.submodule('update', '--init')
 
     def count_workloads(self):
         return len(self.config)
 
     def iter_workloads(self):
         return self.workloads.iteritems()
+
 
 class Workload(object):
     def __init__(self, path, definition):
@@ -127,11 +130,11 @@ class Workload(object):
         self.definition_path = self.path + '/workload.yaml'
         self.name = definition['workload']['name']
         self.generator = definition['workload'].get('generator', self.name)
-    
+
     def save(self):
         with open(self.definition_path, 'w') as file:
             yaml.dump(self.definition, file, default_flow_style=False)
- 
+
     def checkout(self, source):
         g = git.cmd.Git(self.path)
         new = False
@@ -147,7 +150,7 @@ class Workload(object):
 
     def run(self, data_path):
         subprocess.check_call([
-             './run.py', 
-             '-w', './workload.yaml', 
-             '-d', data_path], 
-             cwd=self.path)
+            './run.py',
+            '-w', './workload.yaml',
+            '-d', data_path],
+            cwd=self.path)
