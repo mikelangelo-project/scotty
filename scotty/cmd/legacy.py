@@ -1,12 +1,12 @@
-import scotty.cmd.base.CommandParser
-import scotty.cmd.base.CommandBuilder
-import scotty.cmd.base.CommandRegistry as CommandRegistry
+from scotty.cmd.base import CommandParser
+from scotty.cmd.base import CommandBuilder
+from scotty.cmd.base import CommandRegistry
 import scotty.legacy.workload_generator
 import scotty.legacy.experiment
 
 
 @CommandRegistry.addparser
-class CommandParser(scotty.cmd.base.CommandParser):
+class LegacyParser(CommandParser):
     def add_arguments(self, parser):
         subparser = parser.add_subparsers(
             help='Pipeline',
@@ -17,7 +17,7 @@ class CommandParser(scotty.cmd.base.CommandParser):
             subparser.add_parser('workload_generator'))
 
 
-class ExperimentParser(scotty.cmd.base.CommandParser):
+class ExperimentParser(CommandParser):
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--workspace',
@@ -33,7 +33,7 @@ class ExperimentParser(scotty.cmd.base.CommandParser):
             action='store_true')
 
 
-class WorkloadParser(scotty.cmd.base.CommandParser):
+class WorkloadParser(CommandParser):
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--workspace',
@@ -68,5 +68,5 @@ class Command(object):
 
 
 @CommandRegistry.addbuilder
-class CommandBuilder(scotty.cmd.base.CommandBuilder):
+class CommandBuilder(CommandBuilder):
     command_class = Command
