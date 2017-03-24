@@ -22,7 +22,7 @@ Skip checkout and run existing workload from workspace:
 Run a Workload
 --------------
 
-./scotty.py workload run -w samples/
+    ./scotty.py workload run -w samples/
 
 
 Run the Tests
