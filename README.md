@@ -21,4 +21,5 @@ Skip checkout and run existing workload from workspace:
 
 Run the Tests
 -------------
-python -m unittest discover tests
+
+    python -m unittest discover tests
