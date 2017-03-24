@@ -18,3 +18,8 @@ Checkout from zuul and run workload:
 Skip checkout and run existing workload from workspace:
 
     ./scotty.py legacy workload_generator -w /path/to/workspace -s
+
+Run the Tests
+-------------
+
+    python -m unittest discover tests
