@@ -2,7 +2,7 @@ class CommandRegistry(object):
     registry = {}
 
     @classmethod
-    def addparser(cls, parser_class):
+    def parser(cls, parser_class):
         module_ = parser_class.__module__
         key = cls.getcommandkey(module_)
         cls.registry[key] = cls.registry.get(key, {})
@@ -10,12 +10,20 @@ class CommandRegistry(object):
         return parser_class
 
     @classmethod
-    def addbuilder(cls, builder_class):
+    def builder(cls, builder_class):
         module_ = builder_class.__module__
         key = cls.getcommandkey(module_)
         cls.registry[key] = cls.registry.get(key, {})
         cls.registry[key]['builder'] = builder_class
         return builder_class
+
+    @classmethod
+    def command(cls, command_class):
+        module_ = command_class.__module__
+        key = cls.getcommandkey(module_)
+        cls.registry[key] = cls.registry.get(key, {})
+        cls.registry[key]['command'] = command_class
+        return command_class
 
     @classmethod
     def getcommandkey(cls, module_):
@@ -24,13 +32,17 @@ class CommandRegistry(object):
 
     @classmethod
     def getbuilder(cls, command):
-        builder_class = cls.registry[command]['builder']
+        builder_class = cls.registry[command].get('builder', CommandBuilder)
         return builder_class()
 
     @classmethod
     def getparser(cls, command):
-        parser_class = cls.registry[command]['parser']
+        parser_class = cls.registry[command].get('parser', CommandParser)
         return parser_class()
+
+    @classmethod
+    def getcommand_class(cls, command):
+        return cls.registry[command]['command']
 
 
 class CommandParser(object):
@@ -40,11 +52,6 @@ class CommandParser(object):
 
 
 class CommandBuilder(object):
-    command_class = None
-
-    def buildCommand(self, options):
-        if not self.command_class:
-            raise NotImplementedError(
-                'You must implement CommandBuilder.command_class')
+    def buildCommand(self, options, command_class):
         command = self.command_class(options)
         return command

@@ -15,6 +15,7 @@ class Cli(object):
         options = parser.parse_args(sys.argv[1:2])
         self.command_builder = CommandRegistry.getbuilder(options.command)
         self.command_parser = CommandRegistry.getparser(options.command)
+        self.command_class = CommandRegistry.getcommand_class(options.command)
 
     def parse_command_options(self):
         parser = argparse.ArgumentParser()
@@ -22,7 +23,8 @@ class Cli(object):
         self.options = parser.parse_args(sys.argv[2:])
 
     def execute_command(self):
-        cmd = self.command_builder.buildCommand(self.options)
+        cmd = self.command_builder.buildCommand(self.options,
+                                                self.command_class)
         cmd.execute()
 
 

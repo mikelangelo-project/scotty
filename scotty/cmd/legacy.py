@@ -1,11 +1,10 @@
 from scotty.cmd.base import CommandParser
-from scotty.cmd.base import CommandBuilder
 from scotty.cmd.base import CommandRegistry
 import scotty.legacy.workload_generator
 import scotty.legacy.experiment
 
 
-@CommandRegistry.addparser
+@CommandRegistry.parser
 class LegacyParser(CommandParser):
     def add_arguments(self, parser):
         subparser = parser.add_subparsers(
@@ -55,7 +54,8 @@ class WorkloadParser(CommandParser):
             action='store_true')
 
 
-class Command(object):
+@CommandRegistry.command
+class LegacyCommand(object):
     def __init__(self, options):
         self.options = options
 
@@ -65,8 +65,3 @@ class Command(object):
         elif 'workload_generator' in self.options.pipeline:
             workflow = scotty.legacy.workload_generator.Workflow(self.options)
         workflow.run()
-
-
-@CommandRegistry.addbuilder
-class CommandBuilder(CommandBuilder):
-    command_class = Command
