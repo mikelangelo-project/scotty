@@ -1,11 +1,12 @@
+from collections import defaultdict
+
 class CommandRegistry(object):
-    registry = {}
+    registry = defaultdict(dict)
 
     @classmethod
     def parser(cls, parser_class):
         module_ = parser_class.__module__
         key = cls.getcommandkey(module_)
-        cls.registry[key] = cls.registry.get(key, {})
         cls.registry[key]['parser'] = parser_class
         return parser_class
 
@@ -13,7 +14,6 @@ class CommandRegistry(object):
     def builder(cls, builder_class):
         module_ = builder_class.__module__
         key = cls.getcommandkey(module_)
-        cls.registry[key] = cls.registry.get(key, {})
         cls.registry[key]['builder'] = builder_class
         return builder_class
 
@@ -21,7 +21,6 @@ class CommandRegistry(object):
     def command(cls, command_class):
         module_ = command_class.__module__
         key = cls.getcommandkey(module_)
-        cls.registry[key] = cls.registry.get(key, {})
         cls.registry[key]['command'] = command_class
         return command_class
 
