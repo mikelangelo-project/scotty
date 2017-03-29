@@ -52,5 +52,5 @@ class CommandParser(object):
 
 class CommandBuilder(object):
     def buildCommand(self, options, command_class):
-        command = self.command_class(options)
+        command = command_class(options)
         return command
