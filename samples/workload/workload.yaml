@@ -1,6 +1,6 @@
 workload:
-  name: ycsb_mongo
-  generator: ycsb_mongo
+  name: sample_workload
+  generator: sample
   params:
     mongo_endpoint: mongodb://mongodb:27017
     ycsb_config: data/config/config.dat
