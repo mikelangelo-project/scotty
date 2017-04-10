@@ -38,6 +38,11 @@ class RunParser(CommandParser):
             dest='skip_checkout',
             default=False,
             action='store_true')
+        parser.add_argument(
+            '-p', '--project',
+            help='Workload project to run',
+            dest='project',
+            action='store')
 
 
 class Command(object):
