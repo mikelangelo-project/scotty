@@ -15,12 +15,12 @@ class TestWorkloadLoading(unittest.TestCase):
 
     def test_load_workload_no_name(self):
         workload_ = workload.WorkloadLoader.load_by_path('samples/workload/workload_gen.py')
-        module_ = self.make_module('scotty.workload-gen.anonymous_workload')
+        module_ = self.make_module('scotty.workload_gen.anonymous_workload')
         self.assertEqual(workload_, module_)
         print('Workload loaded with no names: OK')
         
     def test_load_workload_with_name(self):
         workload_ = workload.WorkloadLoader.load_by_path('samples/workload/workload_gen.py', 'test_workload')
-        module_ = self.make_module('scotty.workload-gen.test_workload')
+        module_ = self.make_module('scotty.workload_gen.test_workload')
         self.assertEqual(workload_, module_)
         print('Workload loaded with name: OK')

@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 class WorkloadLoader(object):
     @classmethod
     def load_by_path(cls, path,  name='anonymous_workload'):
-        cls._initparentmodule('scotty.workload-gen')
+        cls._initparentmodule('scotty.workload_gen')
         cls._addmodulepath(path)
-        module_name = "scotty.workload-gen.{name}".format(name=name)
+        module_name = "scotty.workload_gen.{name}".format(name=name)
         workload_ = imp.load_source(module_name, path)
         return workload_
 
     @classmethod
-    def load_by_workspace(cls, workspace, name='ananymous_workload'):
+    def load_by_workspace(cls, workspace, name='anonymous_workload'):
         workload_ = cls.load_by_path(workspace.workload_path, name)
         return workload_
 
@@ -30,7 +30,7 @@ class WorkloadLoader(object):
     def _initparentmodule(cls, parent_mod_name):
         parent_mod = sys.modules.setdefault(parent_mod_name,
                                             imp.new_module(parent_mod_name))
-        parent_mod.__file__ = '<virtual %s>' % parent_mod_name
+        parent_mod.__file__ = '<virtual {}>'.format(parent_mod_name)
 
     @classmethod
     def _addmodulepath(cls, module_path):
@@ -48,9 +48,13 @@ class WorkloadWorkspace(object):
         config_dir = os.path.join(self.path, 'test')
         if not os.path.isdir(config_dir):
             config_dir = os.path.join(self.path, 'samples')
+        if not os.path.isdir(config_dir):
+            raise WorkloadException('Could not find a config directory.')
         config_path = os.path.join(config_dir, 'workload.yaml')
         if not os.path.isfile(config_path):
             config_path = os.path.join(config_dir, 'workload.yml')
+        if not os.path.isfile(config_path):
+            raise WorkloadException('Could not find the config file.')
         return config_path
 
     @property
@@ -58,6 +62,8 @@ class WorkloadWorkspace(object):
         workload_path = os.path.join(self.path, 'workload_gen.py')
         if not os.path.isfile(workload_path):
             workload_path = os.path.join(self.path, 'run.py')
+        if not os.path.isfile(workload_path):
+            raise WorkloadException('Could not find the workload module')
         return workload_path
 
     @contextlib.contextmanager
@@ -76,28 +82,35 @@ class WorkloadWorkspace(object):
         logger.info('    zuul_ref: {}'.format(zuul_ref))
         if not project:
             raise Exception('Missing project to checkout')
-        git_url = '{g}{p}'.format(g=gerrit_url, p=project)
-        g = git.cmd.Git(self.path)
-        if not os.path.isdir('{path}/.git'.format(path=self.path)):
-            logger.info('    Clone {}'.format(git_url))
-            g.clone(git_url, '.')
-        g.remote('update')
-        g.reset('--hard')
-        g.clean('-x', '-f', '-d', '-q')
+        git_url = '{git_repo}{project}'.format(git_repo=gerrit_url, project=project)
+        git_repo = self._prepare_repo(git_url)
+        self._clean_repo(git_repo)
         if zuul_ref.startswith('refs/tags'):
-            raise Exception('Checkout refs/tags not supported')
+            raise Exception('Checkout of refs/tags not supported')
         else:
             logger.info('    Fetch from zuul merger')
             zuul_git_url = '{z}{p}'.format(z=zuul_url, p=project)
-            g.fetch(zuul_git_url, zuul_ref)
-            g.checkout('FETCH_HEAD')
-            g.reset('--hard', 'FETCH_HEAD')
-        g.clean('-x', '-f', '-d', '-q')
+            git_repo.fetch(zuul_git_url, zuul_ref)
+            git_repo.checkout('FETCH_HEAD')
+            git_repo.reset('--hard', 'FETCH_HEAD')
+        git_repo.clean('-x', '-f', '-d', '-q')
         if os.path.isfile('{path}/.gitmodules'.format(path=self.path)):
             logger.info('    Init submodules')
-            g.submodules('init')
-            g.submodules('sync')
-            g.submodules('update', '--init')
+            git_repo.submodules('init')
+            git_repo.submodules('sync')
+            git_repo.submodules('update', '--init')
+
+    def _prepare_repo(self, git_url):
+        git_repo = git.cmd.Git(self.path)
+        if not os.path.isdir('{path}/.git'.format(path=self.path)):
+            logger.info('    Clone {}'.format(git_url))
+            git_repo.clone(git_url, '.')
+        return git_repo
+
+    def _clean_repo(self, git_repo):
+        git_repo.remote('update')
+        git_repo.reset('--hard')
+        git_repo.clean('-x', '-f', '-d', '-q')
 
 
 class WorkloadConfigLoader(object):
@@ -176,3 +189,7 @@ class Workflow(object):
                     workload_.run(self._context)
                 except:
                     logger.exception('Error from customer workload generator')
+
+
+class WorkloadException(Exception):
+    pass
