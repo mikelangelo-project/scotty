@@ -81,24 +81,13 @@ class WorkloadWorkspace(object):
         logger.info('    zuul_url: {}'.format(zuul_url))
         logger.info('    zuul_ref: {}'.format(zuul_ref))
         if not project:
-            raise Exception('Missing project to checkout')
+            raise WorkloadException('Missing project to checkout')
         git_url = '{git_repo}{project}'.format(git_repo=gerrit_url, project=project)
         git_repo = self._prepare_repo(git_url)
         self._clean_repo(git_repo)
-        if zuul_ref.startswith('refs/tags'):
-            raise Exception('Checkout of refs/tags not supported')
-        else:
-            logger.info('    Fetch from zuul merger')
-            zuul_git_url = '{z}{p}'.format(z=zuul_url, p=project)
-            git_repo.fetch(zuul_git_url, zuul_ref)
-            git_repo.checkout('FETCH_HEAD')
-            git_repo.reset('--hard', 'FETCH_HEAD')
+        self._update_repo_from_zuul(git_repo, zuul_ref, zuul_url, project)
         git_repo.clean('-x', '-f', '-d', '-q')
-        if os.path.isfile('{path}/.gitmodules'.format(path=self.path)):
-            logger.info('    Init submodules')
-            git_repo.submodules('init')
-            git_repo.submodules('sync')
-            git_repo.submodules('update', '--init')
+        self._init_submodules(git_repo)
 
     def _prepare_repo(self, git_url):
         git_repo = git.cmd.Git(self.path)
@@ -111,6 +100,23 @@ class WorkloadWorkspace(object):
         git_repo.remote('update')
         git_repo.reset('--hard')
         git_repo.clean('-x', '-f', '-d', '-q')
+
+    def _update_repo_from_zuul(self, git_repo, zuul_ref, zuul_url, project):
+        if zuul_ref.startswith('refs/tags'):
+            raise WorkloadException('Checkout of refs/tags not supported')
+        else:
+            logger.info('    Fetch from zuul merger')
+            zuul_git_url = '{z}{p}'.format(z=zuul_url, p=project)
+            git_repo.fetch(zuul_git_url, zuul_ref)
+            git_repo.checkout('FETCH_HEAD')
+            git_repo.reset('--hard', 'FETCH_HEAD')
+
+    def _init_submodules(self, git_repo):
+        if os.path.isfile('{path}/.gitmodules'.format(path=self.path)):
+            logger.info('    Init submodules')
+            git_repo.submodules('init')
+            git_repo.submodules('sync')
+            git_repo.submodules('update', '--init')
 
 
 class WorkloadConfigLoader(object):
