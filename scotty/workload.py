@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class WorkloadLoader(object):
     @classmethod
-    def load_by_path(cls, path,  name='anonymous_workload'):
+    def load_by_path(cls, path, name='anonymous_workload'):
         cls._initparentmodule('scotty.workload_gen')
         cls._addmodulepath(path)
         module_name = "scotty.workload_gen.{name}".format(name=name)
@@ -40,8 +40,12 @@ class WorkloadLoader(object):
 
 
 class WorkloadWorkspace(object):
-    def __init__(self, path):
+    def __init__(self, path, git_=None):
         self.path = path
+        if git_ is None:
+            self._git = git.cmd.Git
+        else:
+            self._git = git_
 
     @property
     def config_path(self):
@@ -82,7 +86,8 @@ class WorkloadWorkspace(object):
         logger.info('    zuul_ref: {}'.format(zuul_ref))
         if not project:
             raise WorkloadException('Missing project to checkout')
-        git_url = '{git_repo}{project}'.format(git_repo=gerrit_url, project=project)
+        git_url = '{git_repo}{project}'.format(
+            git_repo=gerrit_url, project=project)
         git_repo = self._prepare_repo(git_url)
         self._clean_repo(git_repo)
         self._update_repo_from_zuul(git_repo, zuul_ref, zuul_url, project)
@@ -90,7 +95,8 @@ class WorkloadWorkspace(object):
         self._init_submodules(git_repo)
 
     def _prepare_repo(self, git_url):
-        git_repo = git.cmd.Git(self.path)
+        self._git_repo = self._git(self.path)
+        git_repo = self._git_repo
         if not os.path.isdir('{path}/.git'.format(path=self.path)):
             logger.info('    Clone {}'.format(git_url))
             git_repo.clone(git_url, '.')
@@ -119,6 +125,40 @@ class WorkloadWorkspace(object):
             git_repo.submodules('update', '--init')
 
 
+class GitMock(object):
+    def __init__(self, path):
+        logger.info('Initializing mocked git repo at {}'.format(path))
+        self.action_log = []
+
+    def clone(self, git_url, target):
+        logger.info('Cloning from \'{}\' to \'{}\''.format(git_url, target))
+        self._log('clone', git_url, target)
+
+    def _log(self, action, *args):
+        log_string = '{} {}'.format(action, args)
+        self.action_log.append(log_string)
+
+    def remote(self, command):
+        logger.info('Running \'{}\' on remote'.format(command))
+        self._log('remote', command)
+
+    def reset(self, *options):
+        logger.info('Resetting with options \'{}\''.format(options))
+        self._log('reset', options)
+
+    def clean(self, *args):
+        logger.info('Cleaning with options \'{}\''.format(args))
+        self._log('clean', args)
+
+    def fetch(self, url, ref):
+        logger.info('Fetching \'{}\' from \'{}\''.format(ref, url))
+        self._log('fetch', url, ref)
+
+    def checkout(self, ref):
+        logger.info('Checking out \'{}\''.format(ref))
+        self._log('checkout', ref)
+
+
 class WorkloadConfigLoader(object):
     @classmethod
     def load_by_workspace(cls, workspace):
@@ -134,10 +174,16 @@ class WorkloadConfig(object):
     def __getattr__(self, name):
         return self._dict[name]
 
+    def __str__(self):
+        return str(self._dict)
+
 
 class BaseContext(object):
     def __getattr__(self, name):
         return self._context[name]
+
+    def __str__(self):
+        return str(self._context)
 
 
 class Context(BaseContext):
