@@ -3,7 +3,10 @@ import sys
 import imp
 import os
 
+import mock
+
 import scotty.workload as workload
+from scotty.cli import Cli
 
 
 class WorkloadTest(unittest.TestCase):
@@ -112,4 +115,26 @@ class ContextTest(WorkloadTest):
 
 class WorkflowTest(WorkloadTest):
     def test_run(self):
-        self.fail('TODO')
+        cli = Cli()
+        cli.parse_command(['workload'])
+        cli.parse_command_options(['run', '-w', 'samples'])
+        options = cli.options
+        workflow = workload.Workflow(options)
+        workflow.workspace = self._workspace
+        environ_dict = {
+            'ZUUL_PROJECT': 'zuul_project',
+            'ZUUL_URL': 'zuul_url',
+            'ZUUL_REF': 'zuul_ref'
+        }
+        with mock.patch.dict(os.environ, environ_dict):
+            workflow.run()
+        git_action_log = workflow.workspace._git_repo.action_log
+        git_actions_expected = [
+            "clone ('https://gerrit/p/zuul_project', '.')",
+            "remote ('update',)", "reset (('--hard',),)",
+            "clean (('-x', '-f', '-d', '-q'),)",
+            "fetch ('zuul_urlzuul_project', 'zuul_ref')",
+            "checkout ('FETCH_HEAD',)", "reset (('--hard', 'FETCH_HEAD'),)",
+            "clean (('-x', '-f', '-d', '-q'),)"
+        ]
+        self.assertEqual(git_action_log, git_actions_expected)

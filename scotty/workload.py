@@ -201,6 +201,7 @@ class ContextV1(BaseContext):
 class Workflow(object):
     def __init__(self, options):
         self._options = options
+        self.workspace = None
 
     def run(self):
         self._prepare()
@@ -210,7 +211,8 @@ class Workflow(object):
 
     def _prepare(self):
         path = os.path.abspath(self._options.workspace)
-        self._workspace = WorkloadWorkspace(path)
+        if self.workspace is None:
+            self.workspace = WorkloadWorkspace(path)
 
     def _checkout(self):
         if self._options.skip_checkout:
@@ -226,17 +228,17 @@ class Workflow(object):
             logger.error('Missing environment key ({})'.format(e))
             sys.exit(1)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
-        self._workspace.checkout(project, gerrit_url, zuul_url, zuul_ref)
+        self.workspace.checkout(project, gerrit_url, zuul_url, zuul_ref)
 
     def _load(self):
-        self._config = WorkloadConfigLoader.load_by_workspace(self._workspace)
+        self._config = WorkloadConfigLoader.load_by_workspace(self.workspace)
         self._context = Context(self._config)
 
     def _run(self):
-        workload_ = WorkloadLoader.load_by_workspace(self._workspace,
+        workload_ = WorkloadLoader.load_by_workspace(self.workspace,
                                                      self._config.name)
         if not self._options.mock:
-            with self._workspace.cwd():
+            with self.workspace.cwd():
                 try:
                     workload_.run(self._context)
                 except:
