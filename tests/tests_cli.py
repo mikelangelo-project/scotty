@@ -36,4 +36,4 @@ class CliTest(unittest.TestCase):
                 'ZUUL_REF': 'zuul_ref'
             }
             with mock.patch.dict(os.environ, environ_mock):
-                cli_ = cli.run()
+                cli.run()
