@@ -6,7 +6,7 @@ import ConfigParser
 class Config(object):
     class __Config:
         _raw_config = {
-            'DEFAULT': {
+            'logging': {
                 'log_format': True}}
 
         def __init__(self):
@@ -60,10 +60,10 @@ class Config(object):
 
 
 def setup_logging():
-    log_dir = Config().get('DEFAULT', 'log_dir', True)
-    log_file = Config().get('DEFAULT', 'log_file')
-    log_format = Config().get('DEFAULT', 'log_format')
-    log_level = Config().get('DEFAULT', 'log_level')
+    log_dir = Config().get('logging', 'log_dir', True)
+    log_file = Config().get('logging', 'log_file')
+    log_format = Config().get('logging', 'log_format')
+    log_level = Config().get('logging', 'log_level')
 
     logging.getLogger().setLevel(log_level.upper())
     file_handler = logging.FileHandler(log_dir + '/' + log_file)
