@@ -238,7 +238,7 @@ class Workflow(object):
             with self.workspace.cwd():
                 try:
                     workload_.run(self._context)
-                except Exception as ex:
+                except:
                     logger.exception('Error from customer workload generator')
 
 

@@ -43,3 +43,17 @@ class ConfigTest(unittest.TestCase):
     def _assert_num_options(self, config, section, num_options):
         options = config._config.options(section)
         self.assertEquals(len(options), num_options)
+
+    @mock.patch('os.path.isfile')
+    def test_find_base_dir(self, isfile_mock):
+        isfile_mock.return_value = True
+        config = utils.Config()
+        base_dir = config._find_base_dir()
+        self.assertEquals(base_dir, '/etc/scotty/')
+
+    @mock.patch('os.path.isfile')
+    def test_no_config_file(self, isfile_mock):
+        isfile_mock.return_value = False
+        config = utils.Config()
+        with self.assertRaises(Exception):
+            config._find_base_dir()
