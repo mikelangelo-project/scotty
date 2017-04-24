@@ -1,13 +1,60 @@
 import logging
 import os
 import yaml
+import contextlib
 
 import git
 
 import scotty.utils as utils
+import scotty.workload
 
 logger = logging.getLogger(__name__)
 
+
+class CheckoutManager(object):
+    def __init__(self, git_=None):
+        if git_ is None:
+            self._git = git.cmd.Git
+        else:
+            self._git = git_
+
+    def checkout(self, workspace, project, origin_url, update_url, ref):
+        url = '{url}{project}'.format(url=origin_url, project=project)
+        repo = self._create_repo(workspace, url)
+        self._clean_repo(repo, True)
+        if not update_url:
+            update_url = origin_url
+        url = '{url}{project}'.format(url=update_url, project=project)
+        self._update_repo(repo, url, ref)
+        self._clean_repo(repo)
+        self._init_submodules(workspace, repo)
+
+    def _create_repo(self, workspace, url):
+        repo = self._git(workspace.path)
+        if not os.path.isdir('{path}/.git'.format(path=workspace.path)):
+            repo.clone(url, '.')
+        return repo
+
+    def _clean_repo(self, repo, reset=False):
+        if reset:
+            repo.remote('update')
+            repo.reset('--hard')
+        repo.clean('-x', '-f', '-d', '-q')
+
+    def _update_repo(self, repo, ref, url):
+        if ref.startswith('refs/tags'):
+            raise CheckoutException('Checkout of refs/tags not supported')
+        else:
+            repo.fetch(url, ref)
+            repo.checkout('FETCH_HEAD')
+            repo.reset('--hard', 'FETCH_HEAD')
+
+    def _init_submodules(self, workspace, repo):
+        if os.path.isfile('{path}/.gitmodules'.format(path=workspace.path)):
+            repo.submodules('init')
+            repo.submodules('sync')
+            repo.submodules('update', '--init')
+ 
 
 class Workspace(object):
     def __init__(self, path, git_=None):
@@ -28,16 +75,90 @@ class Workspace(object):
             raise WorkspaceException('Could not find the experiment config file.')
         return path 
 
+    @contextlib.contextmanager
+    def cwd(self):
+        prev_cwd = os.getcwd()
+        os.chdir(self.path)
+        yield
+        os.chdir(prev_cwd)
+
+    def checkout(self, project, origin_url, update_url, ref):
+        url = '{url}{project}'.format(url=origin_url, project=project)
+        repo = self._create_repo(url)
+        self._clean_repo(repo, True)
+        if not update_url:
+            update_url = origin_url
+        url = '{url}{project}'.format(url=update_url, project=project)
+        self._update_repo(repo, url, ref)
+        self._clean_repo(repo)
+        self._init_submodules(repo)
+
+    def _create_repo(self, url):
+        repo = self._git(self.path)
+        if not os.path.isdir('{path}/.git'.format(path=self.path)):
+            repo.clone(url, '.')
+        return repo
+
+    def _clean_repo(self, repo, reset=False):
+        if reset:
+            repo.remote('update')
+            repo.reset('--hard')
+        repo.clean('-x', '-f', '-d', '-q')
+
+    def _update_repo(self, repo, ref, url):
+        if ref.startswith('refs/tags'):
+            raise WorkspaceException('Checkout of refs/tags not supported')
+        else:
+            repo.fetch(url, ref)
+            repo.checkout('FETCH_HEAD')
+            repo.reset('--hard', 'FETCH_HEAD')
+     
+    def _init_submodules(self, repo):
+        if os.path.isfile('{path}/.gitmodules'.format(path=self.path)):
+            repo.submodules('init')
+            repo.submodules('sync')
+            repo.submodules('update', '--init')
+
 
 class Workload(object):
     def __init__(self):
         pass
 
+    @property
+    def module(self):
+        return self._module
+
+    @module.setter
+    def module(self, value):
+        self._module = value
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, value):
+        self._config = value
+
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, value):
+        self._workspace = value
+
 
 class WorkloadLoader(object):
     @classmethod
-    def load_by_config(cls, config):
-        return Workload()
+    def load_by_config(cls, config, workspace):
+        config = scotty.workload.WorkloadConfigLoader.load_by_dict(config)
+        module_ = scotty.workload.WorkloadLoader.load_by_workspace(workspace)
+        workload = Workload()
+        workload.workspace = workspace
+        workload.config = config
+        workload.module = module_
+        return workload
 
 
 class Experiment(object):
@@ -107,14 +228,30 @@ class Workflow(object):
             message = 'Missing Zuul settings ({})'.format(e)
             logger.error(message)
             raise CheckoutException(message)
+        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        CheckoutManager.checkout(workspace, project, gerrit_url, zuul_url, zuul_ref)
                 
     def _load(self):
         workspace = self.experiment.workspace
+        exp_path = workspace.path
         config = ExperimentConfigLoader.load_by_workspace(workspace)
         self.experiment.config = config
-        for workload_config in config.workloads:
-            workload = WorkloadLoader.load_by_config(workload_config)
+        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        for workload_dict in config.workloads:
+            workload = self._load_workload(exp_path, workload_dict)
             self.experiment.add_workload(workload)
+
+    def _load_workload(self, exp_path, workload_dict):
+        config = scotty.workload.WorkloadConfigLoader.load_by_dict(workload_dict)
+        path = os.path.join(exp_path, '.workloads/{}'.format(config.name))
+        workspace = scotty.workload.WorkloadWorkspace(path)
+        if not self._options.skip_checkout:
+            # TODO split generator by : into generator and reference
+            generator = config.generator
+            project = 'workload_gen/{}'.format(generator)
+            CheckoutManager.checkout(workspace, project, gerrit_url, None, 'master')
+        workload = WorkloadLoader.load_by_config(config, workspace)
+        return workload
 
     def _run(self):
         pass
