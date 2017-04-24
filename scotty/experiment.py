@@ -61,10 +61,6 @@ class Workspace(object):
         self.path = path
         if not os.path.isdir(path):
             raise WorkspaceException('{} does not exist or is no directory'.format(path))
-        if git_ is None:
-            self._git = git.cmd.Git
-        else:
-            self._git = git_
 
     @property
     def config_path(self):
