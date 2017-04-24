@@ -82,43 +82,6 @@ class Workspace(object):
         yield
         os.chdir(prev_cwd)
 
-    def checkout(self, project, origin_url, update_url, ref):
-        url = '{url}{project}'.format(url=origin_url, project=project)
-        repo = self._create_repo(url)
-        self._clean_repo(repo, True)
-        if not update_url:
-            update_url = origin_url
-        url = '{url}{project}'.format(url=update_url, project=project)
-        self._update_repo(repo, url, ref)
-        self._clean_repo(repo)
-        self._init_submodules(repo)
-
-    def _create_repo(self, url):
-        repo = self._git(self.path)
-        if not os.path.isdir('{path}/.git'.format(path=self.path)):
-            repo.clone(url, '.')
-        return repo
-
-    def _clean_repo(self, repo, reset=False):
-        if reset:
-            repo.remote('update')
-            repo.reset('--hard')
-        repo.clean('-x', '-f', '-d', '-q')
-
-    def _update_repo(self, repo, ref, url):
-        if ref.startswith('refs/tags'):
-            raise WorkspaceException('Checkout of refs/tags not supported')
-        else:
-            repo.fetch(url, ref)
-            repo.checkout('FETCH_HEAD')
-            repo.reset('--hard', 'FETCH_HEAD')
-     
-    def _init_submodules(self, repo):
-        if os.path.isfile('{path}/.gitmodules'.format(path=self.path)):
-            repo.submodules('init')
-            repo.submodules('sync')
-            repo.submodules('update', '--init')
-
 
 class Workload(object):
     def __init__(self):
