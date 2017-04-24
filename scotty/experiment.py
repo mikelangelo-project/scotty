@@ -115,7 +115,6 @@ class Workload(object):
 class WorkloadLoader(object):
     @classmethod
     def load_by_config(cls, config, workspace):
-        config = scotty.workload.WorkloadConfigLoader.load_by_dict(config)
         module_ = scotty.workload.WorkloadLoader.load_by_workspace(workspace)
         workload = Workload()
         workload.workspace = workspace
