@@ -1,0 +1,27 @@
+description: |
+  "This is a example for a experiment definition in scotty
+  The section are
+    - description
+    - tags
+    - environment
+    - components
+    - workloads"
+tags:
+  - sample_experiment
+  - sample01
+  - demo
+environment:
+  iocm: false
+  mcm:
+    module: schedulers.test_scheduler
+    class: TestScheduler
+components:
+  - name: demo_cluster
+    endpoint: https://demo.cluster
+workloads:
+  - name: sample_workload
+    generator: sample
+    components:
+      cluster: demo_cluster
+    params:
+      concurrency: 2
