@@ -84,8 +84,6 @@ class WorkloadWorkspace(object):
         logger.info('    gerrit_url: {}'.format(gerrit_url))
         logger.info('    zuul_url: {}'.format(zuul_url))
         logger.info('    zuul_ref: {}'.format(zuul_ref))
-        if not project:
-            raise WorkloadException('Missing project to checkout')
         git_url = '{git_repo}{project}'.format(
             git_repo=gerrit_url, project=project)
         git_repo = self._prepare_repo(git_url)
@@ -158,6 +156,11 @@ class GitMock(object):
         logger.info('Checking out \'{}\''.format(ref))
         self._log('checkout', ref)
 
+    def submodules(self, command, *args):
+        logger.info('Running sobumodule command \'{}\' with args \'{}\''.
+                    format(command, args))
+        self._log('submodules', command)
+
 
 class WorkloadConfigLoader(object):
     @classmethod
@@ -174,16 +177,10 @@ class WorkloadConfig(object):
     def __getattr__(self, name):
         return self._dict[name]
 
-    def __str__(self):
-        return str(self._dict)
-
 
 class BaseContext(object):
     def __getattr__(self, name):
         return self._context[name]
-
-    def __str__(self):
-        return str(self._context)
 
 
 class Context(BaseContext):
@@ -226,7 +223,7 @@ class Workflow(object):
             zuul_ref = os.environ['ZUUL_REF']
         except KeyError as e:
             logger.error('Missing environment key ({})'.format(e))
-            sys.exit(1)
+            raise WorkloadException('Missing Zuul settings')
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         self.workspace.checkout(project, gerrit_url, zuul_url, zuul_ref)
 
@@ -241,9 +238,13 @@ class Workflow(object):
             with self.workspace.cwd():
                 try:
                     workload_.run(self._context)
-                except:
+                except Exception as ex:
                     logger.exception('Error from customer workload generator')
 
 
 class WorkloadException(Exception):
+    pass
+
+
+class WorkloadPluginException(Exception):
     pass

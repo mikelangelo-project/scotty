@@ -12,3 +12,4 @@ def run(context):
     print '{context}'.format(context=context.v1.workload_config._dict)
     print 'params'
     print '{params}'.format(params=context.v1.workload_config.params)
+    raise Exception('TestException')
