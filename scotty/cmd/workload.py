@@ -8,7 +8,7 @@ from scotty import workload
 logger = logging.getLogger(__name__)
 
 
-@CommandRegistry.addparser
+@CommandRegistry.parser
 class WorkloadParser(CommandParser):
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(
@@ -45,6 +45,7 @@ class RunParser(CommandParser):
             action='store')
 
 
+@CommandRegistry.command
 class Command(object):
     def __init__(self, options):
         self.options = options
@@ -53,8 +54,3 @@ class Command(object):
         if self.options.action == 'run':
             workflow = workload.Workflow(self.options)
             workflow.run()
-
-
-@CommandRegistry.addbuilder
-class CommandBuilder(CommandBuilder):
-    command_class = Command
