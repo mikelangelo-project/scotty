@@ -33,14 +33,16 @@ class Workflow(object):
             sys.exit(-1)
         self._experiment = Experiment(workspace, project)
         LOG.info('    project: {}'.format(self._experiment.project))
-        LOG.info('    source: {}'.format(gerrit_url + self._experiment.project))
+        LOG.info('    source: {}'.format(
+            gerrit_url + self._experiment.project))
         LOG.info('    workspace: {}'.format(self._experiment.workspace))
         self._experiment.checkout(gerrit_url, zuul_url, zuul_ref)
 
     def _load_experiment(self):
         LOG.info('Load experiment')
         self._experiment.load()
-        LOG.info('    workloads: {}'.format(self._experiment.count_workloads()))
+        LOG.info('    workloads: {}'.format(
+            self._experiment.count_workloads()))
 
     def _split_experiment(self):
         LOG.info('Split experiment into workloads')
