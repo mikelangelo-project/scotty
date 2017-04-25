@@ -10,7 +10,9 @@ class ConfigTest(unittest.TestCase):
         config = utils.Config()
         self.assertIsNotNone(config)
 
-    def test_config_log_fields(self):
+    @mock.patch('scotty.utils.Config._find_base_dir')
+    def test_config_log_fields(self, base_dir_mock):
+        base_dir_mock.return_value = 'samples/etc/'
         config = utils.Config()
         log_dir = config.get('logging', 'log_dir')
         self.assertEquals(log_dir, '../log')
@@ -54,6 +56,5 @@ class ConfigTest(unittest.TestCase):
     @mock.patch('os.path.isfile')
     def test_no_config_file(self, isfile_mock):
         isfile_mock.return_value = False
-        config = utils.Config()
         with self.assertRaises(Exception):
-            config._find_base_dir()
+            utils.Config()
