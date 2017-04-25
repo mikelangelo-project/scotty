@@ -41,7 +41,7 @@ class CheckoutManager(object):
             repo.reset('--hard')
         repo.clean('-x', '-f', '-d', '-q')
 
-    def _update_repo(self, repo, ref, url):
+    def _update_repo(self, repo, url, ref):
         if ref.startswith('refs/tags'):
             raise CheckoutException('Checkout of refs/tags not supported')
         else:
@@ -192,14 +192,15 @@ class Workflow(object):
             return
         try:
             project = self._options.project or os.environ['ZUUL_PROJECT']
-            zuul_url = self._options.zuul_url or os.environ['ZUUL_URL']
-            zuul_ref = self._options.zuul_ref or os.environ['ZUUL_REF']
+            zuul_url = os.environ['ZUUL_URL']
+            zuul_ref = os.environ['ZUUL_REF']
         except KeyError as e:
             message = 'Missing Zuul settings ({})'.format(e)
             logger.error(message)
             raise CheckoutException(message)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
-        CheckoutManager.checkout(workspace, project, gerrit_url, zuul_url, zuul_ref)
+        workspace = self.experiment.workspace
+        CheckoutManager().checkout(workspace, project, gerrit_url, zuul_url, zuul_ref)
                 
     def _load(self):
         workspace = self.experiment.workspace
@@ -219,7 +220,7 @@ class Workflow(object):
             # TODO split generator by : into generator and reference
             generator = config.generator
             project = 'workload_gen/{}'.format(generator)
-            CheckoutManager.checkout(workspace, project, gerrit_url, None, 'master')
+            CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
         workload = WorkloadLoader.load_by_config(config, workspace)
         return workload
 
