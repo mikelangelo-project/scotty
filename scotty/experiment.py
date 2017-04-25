@@ -227,9 +227,9 @@ class Workflow(object):
     def _run(self):
         if not self._options.mock:
             for workload_name, workload in self.experiment.workloads.iteritems():
-                context = scotty.workload.Context(workload.config)
                 with self.experiment.workspace.cwd():
                     try:
+                        context = workload.context
                         workload.module.run(context)
                     except:
                         logger.exception('Error from customer workload generator')
