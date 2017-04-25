@@ -107,6 +107,14 @@ class Workload(object):
     def workspace(self, value):
         self._workspace = value
 
+    @property
+    def name(self):
+        return self._config.name
+
+    @property
+    def context(self):
+        return scotty.workload.Context(self._config)
+
 
 class WorkloadLoader(object):
     @classmethod
@@ -120,12 +128,16 @@ class WorkloadLoader(object):
 
 
 class Experiment(object):
+    def __init__(self):
+        self._workloads = {}
+
     def add_workload(self, workload):
+        self._workloads[workload.name] = workload
         pass   
 
     @property
-    def workload(self):
-        return self._workload or {}
+    def workloads(self):
+        return self._workloads
 
     @property
     def config(self):
@@ -212,7 +224,14 @@ class Workflow(object):
         return workload
 
     def _run(self):
-        pass
+        if not self._options.mock:
+            for workload_name, workload in self.experiment.workloads.iteritems():
+                context = scotty.workload.Context(workload.config)
+                with self.experiment.workspace.cwd():
+                    try:
+                        workload.module.run(context)
+                    except:
+                        logger.exception('Error from customer workload generator')
 
 
 class CheckoutException(Exception):
