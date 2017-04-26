@@ -118,11 +118,10 @@ class Workload(object):
 
 class WorkloadLoader(object):
     @classmethod
-    def load_by_config(cls, config, workspace):
+    def load_from_workspace(cls, workspace):
         module_ = scotty.workload.WorkloadLoader.load_by_workspace(workspace)
         workload = Workload()
         workload.workspace = workspace
-        workload.config = config
         workload.module = module_
         return workload
 
@@ -204,24 +203,29 @@ class Workflow(object):
                 
     def _load(self):
         workspace = self.experiment.workspace
-        exp_path = workspace.path
+        workloads_path = os.path.join(workspace.path, '.workloads')
+        if not os.path.isdir(workloads_path):
+            os.mkdir(workloads_path)
         config = ExperimentConfigLoader.load_by_workspace(workspace)
         self.experiment.config = config
-        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         for workload_dict in config.workloads:
-            workload = self._load_workload(exp_path, workload_dict)
+            workload = self._load_workload(workloads_path, workload_dict)
             self.experiment.add_workload(workload)
 
-    def _load_workload(self, exp_path, workload_dict):
+    def _load_workload(self, workloads_path, workload_dict):
         config = scotty.workload.WorkloadConfigLoader.load_by_dict(workload_dict)
-        path = os.path.join(exp_path, '.workloads/{}'.format(config.name))
-        workspace = scotty.workload.WorkloadWorkspace(path)
+        workload_path = os.path.join(workloads_path, config.name)
+        if not os.path.isdir(workload_path):
+            os.mkdir(workload_path)
+        workspace = scotty.workload.WorkloadWorkspace(workload_path)
+        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         if not self._options.skip_checkout:
             # TODO split generator by : into generator and reference
             generator = config.generator
             project = 'workload_gen/{}'.format(generator)
             CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
-        workload = WorkloadLoader.load_by_config(config, workspace)
+        workload = WorkloadLoader.load_from_workspace(workspace)
+        workload.config = config
         return workload
 
     def _run(self):
