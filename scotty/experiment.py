@@ -7,6 +7,7 @@ import git
 
 import scotty.utils as utils
 import scotty.workload
+import scotty.core.exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class CheckoutManager(object):
 
     def _update_repo(self, repo, url, ref):
         if ref.startswith('refs/tags'):
-            raise CheckoutException('Checkout of refs/tags not supported')
+            raise scotty.core.exceptions.ScottyException('Checkout of refs/tags not supported')
         else:
             repo.fetch(url, ref)
             repo.checkout('FETCH_HEAD')
@@ -54,7 +55,7 @@ class Workspace(object):
     def __init__(self, path):
         self.path = path
         if not os.path.isdir(path):
-            raise WorkspaceException(
+            raise scotty.core.exceptions.ExperimentException(
                 '{} does not exist or is no directory'.format(path))
 
     @property
@@ -63,7 +64,7 @@ class Workspace(object):
         if not os.path.isfile(path):
             path = os.path.join(self.path, 'experiment.yml')
         if not os.path.isfile(path):
-            raise WorkspaceException(
+            raise scotty.core.exceptions.ExperimentException(
                 'Could not find the experiment config file.')
         return path
 
@@ -186,7 +187,7 @@ class Workflow(object):
         except KeyError as e:
             message = 'Missing Zuul settings ({})'.format(e)
             logger.error(message)
-            raise CheckoutException(message)
+            raise scotty.core.exceptions.ExperimentException(message)
         gerrit_url = self._config.get('gerrit', 'host') + '/p/'
         workspace = self.experiment.workspace
         CheckoutManager().checkout(workspace, project, gerrit_url, zuul_url,
@@ -229,11 +230,3 @@ class Workflow(object):
                     except:
                         logger.exception(
                             'Error from customer workload generator')
-
-
-class CheckoutException(Exception):
-    pass
-
-
-class WorkspaceException(Exception):
-    pass

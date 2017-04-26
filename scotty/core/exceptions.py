@@ -1,10 +1,10 @@
-class ScottyException(Exception)
+class ScottyException(Exception):
     pass
 
 
-class ExperimentException(ScottyException)
+class ExperimentException(ScottyException):
     pass
 
 
-class WorkloadException(ScottyException)
+class WorkloadException(ScottyException):
     pass
