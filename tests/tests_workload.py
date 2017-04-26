@@ -143,23 +143,15 @@ class WorkloadConfigLoaderTest(WorkloadTest):
         workload_config = self._get_workload_config()
         self.assertIsNotNone(workload_config)
 
-    def test_load_by_dict(self):
-        with open('samples/experiment/experiment.yaml', 'r') as experiment_file:
-            workload_dict = yaml.load(experiment_file)
-        workload_config = workload.WorkloadConfigLoader.load_by_dict(workload_dict)
-        self.assertIsNotNone(workload_config)
-        self.assertFalse(workload_config.environment['iocm'])
-        self.assertEquals(workload_config.components[0]['name'], 'demo_cluster')
-
 
 class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
         workload_config = workload.WorkloadConfigLoader.load_by_workspace(
             self._workspace)
-        self.assertEquals(workload_config.name, 'sample_workload')
-        self.assertEquals(workload_config.generator, 'sample')
-        self.assertTrue(isinstance(workload_config.params, dict))
-        self.assertTrue(isinstance(workload_config.environment, dict))
+        self.assertEquals(workload_config['name'], 'sample_workload')
+        self.assertEquals(workload_config['generator'], 'sample')
+        self.assertTrue(isinstance(workload_config['params'], dict))
+        self.assertTrue(isinstance(workload_config['environment'], dict))
 
 
 class ContextTest(WorkloadTest):

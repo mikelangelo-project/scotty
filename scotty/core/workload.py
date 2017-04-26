@@ -211,19 +211,7 @@ class WorkloadConfigLoader(object):
     def load_by_workspace(cls, workspace):
         with open(workspace.config_path, 'r') as stream:
             dict_ = yaml.load(stream)
-        return WorkloadConfig(dict_['workload'])
-
-    @classmethod
-    def load_by_dict(cls, dict_):
-        return WorkloadConfig(dict_)
-
-
-class WorkloadConfig(object):
-    def __init__(self, dict_):
-        self._dict = dict_
-
-    def __getattr__(self, name):
-        return self._dict[name]
+        return dict_['workload']
 
 
 class BaseContext(object):
@@ -281,7 +269,7 @@ class Workflow(object):
 
     def _run(self):
         workload_ = WorkloadModuleLoader.load_by_workspace(self.workspace,
-                                                     self._config.name)
+                                                     self._config['name'])
         if not self._options.mock:
             with self.workspace.cwd():
                 try:
