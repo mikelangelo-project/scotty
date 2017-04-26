@@ -116,7 +116,7 @@ class Workload(object):
 class WorkloadLoader(object):
     @classmethod
     def load_from_workspace(cls, workspace):
-        module_ = scotty.core.workload.WorkloadLoader.load_by_workspace(workspace)
+        module_ = scotty.core.workload.WorkloadModuleLoader.load_by_workspace(workspace)
         workload = Workload()
         workload.workspace = workspace
         workload.module = module_

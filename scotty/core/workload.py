@@ -12,7 +12,7 @@ import scotty.utils as utils
 logger = logging.getLogger(__name__)
 
 
-class WorkloadLoader(object):
+class WorkloadModuleLoader(object):
     @classmethod
     def load_by_path(cls, path, name='anonymous_workload'):
         cls._initparentmodule('scotty.workload_gen')
@@ -236,7 +236,7 @@ class Workflow(object):
         self._context = Context(self._config)
 
     def _run(self):
-        workload_ = WorkloadLoader.load_by_workspace(self.workspace,
+        workload_ = WorkloadModuleLoader.load_by_workspace(self.workspace,
                                                      self._config.name)
         if not self._options.mock:
             with self.workspace.cwd():
