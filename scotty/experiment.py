@@ -160,13 +160,15 @@ class ExperimentConfigLoader(object):
     def load_by_workspace(cls, workspace):
         with open(workspace.config_path, 'r') as stream:
             dict_ = yaml.load(stream)
-        return ExperimentConfig(dict_)
+        return Config(dict_)
 
-class ExperimentConfig(object):
+class Config(object):
     def __init__(self, dict_):
         self._dict = dict_
 
     def __getattr__(self, name):
+        if isinstance(self._dict[name], dict):
+            self._dict[name] = Config(self._dict[name])
         return self._dict[name]
 
 
@@ -212,12 +214,12 @@ class Workflow(object):
             workload = self._load_workload(workloads_path, workload_dict)
             self.experiment.add_workload(workload)
 
-    def _load_workload(self, workloads_path, workload_dict):
-        config = scotty.workload.WorkloadConfigLoader.load_by_dict(workload_dict)
-        workload_path = os.path.join(workloads_path, config.name)
-        if not os.path.isdir(workload_path):
-            os.mkdir(workload_path)
-        workspace = scotty.workload.WorkloadWorkspace(workload_path)
+    def _load_workload(self, root_path, workload_dict):
+        config = Config(workload_dict)
+        path = os.path.join(root_path, config.name)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        workspace = scotty.workload.WorkloadWorkspace(path)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         if not self._options.skip_checkout:
             # TODO split generator by : into generator and reference
