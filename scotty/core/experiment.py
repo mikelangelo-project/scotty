@@ -76,53 +76,6 @@ class Workspace(object):
         os.chdir(prev_cwd)
 
 
-class Workload(object):
-    def __init__(self):
-        pass
-
-    @property
-    def module(self):
-        return self._module
-
-    @module.setter
-    def module(self, value):
-        self._module = value
-
-    @property
-    def config(self):
-        return self._config
-
-    @config.setter
-    def config(self, value):
-        self._config = value
-
-    @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, value):
-        self._workspace = value
-
-    @property
-    def name(self):
-        return self._config['name']
-
-    @property
-    def context(self):
-        return scotty.core.workload.Context(self._config)
-
-
-class WorkloadLoader(object):
-    @classmethod
-    def load_from_workspace(cls, workspace):
-        module_ = scotty.core.workload.WorkloadModuleLoader.load_by_workspace(workspace)
-        workload = Workload()
-        workload.workspace = workspace
-        workload.module = module_
-        return workload
-
-
 class Experiment(object):
     def __init__(self):
         self._workloads = {}
@@ -216,7 +169,7 @@ class Workflow(object):
             generator = workload_config['generator']
             project = 'workload_gen/{}'.format(generator)
             CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
-        workload = WorkloadLoader.load_from_workspace(workspace)
+        workload = scotty.core.workload.WorkloadLoader.load_from_workspace(workspace)
         workload.config = workload_config
         return workload
 

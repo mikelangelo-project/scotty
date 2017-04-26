@@ -39,6 +39,50 @@ class WorkloadModuleLoader(object):
         sys.path.insert(0, path)
 
 
+class Workload(object):
+    @property
+    def module(self):
+        return self._module
+
+    @module.setter
+    def module(self, value):
+        self._module = value
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, value):
+        self._config = value
+
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, value):
+        self._workspace = value
+
+    @property
+    def name(self):
+        return self._config['name']
+
+    @property
+    def context(self):
+        return Context(self._config)
+
+
+class WorkloadLoader(object):
+    @classmethod
+    def load_from_workspace(cls, workspace):
+        module_ = WorkloadModuleLoader.load_by_workspace(workspace)
+        workload = Workload()
+        workload.workspace = workspace
+        workload.module = module_
+        return workload
+
+
 class WorkloadWorkspace(object):
     def __init__(self, path, git_=None):
         self.path = path
