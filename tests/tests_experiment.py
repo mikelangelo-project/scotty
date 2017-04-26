@@ -2,8 +2,8 @@ import unittest
 
 import mock
 
-from scotty.experiment import CheckoutManager
-from scotty.experiment import Workspace
+from scotty.core.experiment import CheckoutManager
+from scotty.core.experiment import Workspace
 
 
 class CheckoutManagerClass(unittest.TestCase):

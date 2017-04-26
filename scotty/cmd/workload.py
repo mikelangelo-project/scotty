@@ -2,7 +2,7 @@ import logging
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
-from scotty import workload
+from scotty.core import workload
 
 logger = logging.getLogger(__name__)
 

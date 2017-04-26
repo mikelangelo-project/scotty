@@ -6,7 +6,7 @@ import contextlib
 import git
 
 import scotty.utils as utils
-import scotty.workload
+import scotty.core.workload
 import scotty.core.exceptions
 
 logger = logging.getLogger(__name__)
@@ -110,13 +110,13 @@ class Workload(object):
 
     @property
     def context(self):
-        return scotty.workload.Context(self._config)
+        return scotty.core.workload.Context(self._config)
 
 
 class WorkloadLoader(object):
     @classmethod
     def load_from_workspace(cls, workspace):
-        module_ = scotty.workload.WorkloadLoader.load_by_workspace(workspace)
+        module_ = scotty.core.workload.WorkloadLoader.load_by_workspace(workspace)
         workload = Workload()
         workload.workspace = workspace
         workload.module = module_
@@ -209,7 +209,7 @@ class Workflow(object):
         path = os.path.join(root_path, workload_config['name'])
         if not os.path.isdir(path):
             os.mkdir(path)
-        workspace = scotty.workload.WorkloadWorkspace(path)
+        workspace = scotty.core.workload.WorkloadWorkspace(path)
         gerrit_url = self._config.get('gerrit', 'host') + '/p/'
         if not self._options.skip_checkout:
             # TODO split generator by : into generator and reference

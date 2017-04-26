@@ -6,7 +6,7 @@ import os
 import mock
 import yaml
 
-import scotty.workload as workload
+import scotty.core.workload as workload
 from scotty.cli import Cli
 
 
