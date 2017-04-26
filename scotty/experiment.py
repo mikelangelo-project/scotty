@@ -12,12 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class CheckoutManager(object):
-    def __init__(self, git_=None):
-        if git_ is None:
-            self._git = git.cmd.Git
-        else:
-            self._git = git_
-
     def checkout(self, workspace, project, origin_url, update_url, ref):
         url = '{url}{project}'.format(url=origin_url, project=project)
         repo = self._create_repo(workspace, url)
@@ -30,7 +24,7 @@ class CheckoutManager(object):
         self._init_submodules(workspace, repo)
 
     def _create_repo(self, workspace, url):
-        repo = self._git(workspace.path)
+        repo = git.cmd.Git(workspace.path)
         if not os.path.isdir('{path}/.git'.format(path=workspace.path)):
             repo.clone(url, '.')
         return repo
@@ -54,13 +48,14 @@ class CheckoutManager(object):
             repo.submodules('init')
             repo.submodules('sync')
             repo.submodules('update', '--init')
- 
+
 
 class Workspace(object):
-    def __init__(self, path, git_=None):
+    def __init__(self, path):
         self.path = path
         if not os.path.isdir(path):
-            raise WorkspaceException('{} does not exist or is no directory'.format(path))
+            raise WorkspaceException(
+                '{} does not exist or is no directory'.format(path))
 
     @property
     def config_path(self):
@@ -68,8 +63,9 @@ class Workspace(object):
         if not os.path.isfile(path):
             path = os.path.join(self.path, 'experiment.yml')
         if not os.path.isfile(path):
-            raise WorkspaceException('Could not find the experiment config file.')
-        return path 
+            raise WorkspaceException(
+                'Could not find the experiment config file.')
+        return path
 
     @contextlib.contextmanager
     def cwd(self):
@@ -109,7 +105,7 @@ class Workload(object):
 
     @property
     def name(self):
-        return self._config.name
+        return self._config['name']
 
     @property
     def context(self):
@@ -132,7 +128,7 @@ class Experiment(object):
 
     def add_workload(self, workload):
         self._workloads[workload.name] = workload
-        pass   
+        pass
 
     @property
     def workloads(self):
@@ -160,21 +156,13 @@ class ExperimentConfigLoader(object):
     def load_by_workspace(cls, workspace):
         with open(workspace.config_path, 'r') as stream:
             dict_ = yaml.load(stream)
-        return Config(dict_)
-
-class Config(object):
-    def __init__(self, dict_):
-        self._dict = dict_
-
-    def __getattr__(self, name):
-        if isinstance(self._dict[name], dict):
-            self._dict[name] = Config(self._dict[name])
-        return self._dict[name]
+        return dict_
 
 
 class Workflow(object):
     def __init__(self, options):
         self._options = options
+        self._config = utils.Config()
         self.experiment = None
 
     def run(self):
@@ -199,35 +187,36 @@ class Workflow(object):
             message = 'Missing Zuul settings ({})'.format(e)
             logger.error(message)
             raise CheckoutException(message)
-        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        gerrit_url = self._config.get('gerrit', 'host') + '/p/'
         workspace = self.experiment.workspace
-        CheckoutManager().checkout(workspace, project, gerrit_url, zuul_url, zuul_ref)
-                
+        CheckoutManager().checkout(workspace, project, gerrit_url, zuul_url,
+                                   zuul_ref)
+
     def _load(self):
         workspace = self.experiment.workspace
         workloads_path = os.path.join(workspace.path, '.workloads')
         if not os.path.isdir(workloads_path):
             os.mkdir(workloads_path)
-        config = ExperimentConfigLoader.load_by_workspace(workspace)
-        self.experiment.config = config
-        for workload_dict in config.workloads:
+        exp_config = ExperimentConfigLoader.load_by_workspace(workspace)
+        self.experiment.config = exp_config
+        for workload_dict in exp_config['workloads']:
             workload = self._load_workload(workloads_path, workload_dict)
             self.experiment.add_workload(workload)
 
     def _load_workload(self, root_path, workload_dict):
-        config = Config(workload_dict)
-        path = os.path.join(root_path, config.name)
+        workload_config = workload_dict
+        path = os.path.join(root_path, workload_config['name'])
         if not os.path.isdir(path):
             os.mkdir(path)
         workspace = scotty.workload.WorkloadWorkspace(path)
-        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        gerrit_url = self._config.get('gerrit', 'host') + '/p/'
         if not self._options.skip_checkout:
             # TODO split generator by : into generator and reference
-            generator = config.generator
+            generator = workload_config['generator']
             project = 'workload_gen/{}'.format(generator)
             CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
         workload = WorkloadLoader.load_from_workspace(workspace)
-        workload.config = config
+        workload.config = workload_config
         return workload
 
     def _run(self):
@@ -238,7 +227,8 @@ class Workflow(object):
                         context = workload.context
                         workload.module.run(context)
                     except:
-                        logger.exception('Error from customer workload generator')
+                        logger.exception(
+                            'Error from customer workload generator')
 
 
 class CheckoutException(Exception):

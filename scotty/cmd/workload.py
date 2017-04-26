@@ -1,7 +1,6 @@
 import logging
 
 from scotty.cmd.base import CommandParser
-from scotty.cmd.base import CommandBuilder
 from scotty.cmd.base import CommandRegistry
 from scotty import workload
 

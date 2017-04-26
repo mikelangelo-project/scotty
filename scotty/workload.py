@@ -168,7 +168,7 @@ class WorkloadConfigLoader(object):
         with open(workspace.config_path, 'r') as stream:
             dict_ = yaml.load(stream)
         return WorkloadConfig(dict_['workload'])
-   
+
     @classmethod
     def load_by_dict(cls, dict_):
         return WorkloadConfig(dict_)
