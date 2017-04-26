@@ -4,6 +4,7 @@ import imp
 import os
 
 import mock
+import yaml
 
 import scotty.workload as workload
 from scotty.cli import Cli
@@ -141,6 +142,14 @@ class WorkloadConfigLoaderTest(WorkloadTest):
     def test_load_by_workspace(self):
         workload_config = self._get_workload_config()
         self.assertIsNotNone(workload_config)
+
+    def test_load_by_dict(self):
+        with open('samples/experiment/experiment.yaml', 'r') as experiment_file:
+            workload_dict = yaml.load(experiment_file)
+        workload_config = workload.WorkloadConfigLoader.load_by_dict(workload_dict)
+        self.assertIsNotNone(workload_config)
+        self.assertFalse(workload_config.environment['iocm'])
+        self.assertEquals(workload_config.components[0]['name'], 'demo_cluster')
 
 
 class WorkloadConfigTest(WorkloadTest):
