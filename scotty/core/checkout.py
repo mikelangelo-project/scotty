@@ -13,9 +13,8 @@ class Manager(object):
         url = '{url}{project}'.format(url=origin_url, project=project)
         repo = self._create_repo(workspace, url)
         self._clean_repo(repo, True)
-        if not update_url:
-            update_url = origin_url
-        url = '{url}{project}'.format(url=update_url, project=project)
+        if update_url is not None:
+            url = '{url}{project}'.format(url=update_url, project=project)
         self._update_repo(repo, url, ref)
         self._clean_repo(repo)
         self._init_submodules(workspace, repo)
