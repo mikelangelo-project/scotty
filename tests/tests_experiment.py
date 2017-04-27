@@ -2,7 +2,7 @@ import unittest
 
 import mock
 
-from scotty.core.experiment import CheckoutManager
+import scotty.core.checkout 
 from scotty.core.experiment import Workspace
 
 
@@ -11,7 +11,7 @@ class CheckoutManagerClass(unittest.TestCase):
         'git.cmd')
     def test_checkout(self, git_mock):
         workspace = Workspace('samples/experiment')
-        checkout_manager = CheckoutManager()
+        checkout_manager = scotty.core.checkout.Manager()
         checkout_manager.checkout(
             workspace=workspace,
             project='project',

@@ -8,47 +8,9 @@ import git
 import scotty.utils as utils
 import scotty.core.workload
 import scotty.core.exceptions
+import scotty.core.checkout
 
 logger = logging.getLogger(__name__)
-
-
-class CheckoutManager(object):
-    def checkout(self, workspace, project, origin_url, update_url, ref):
-        url = '{url}{project}'.format(url=origin_url, project=project)
-        repo = self._create_repo(workspace, url)
-        self._clean_repo(repo, True)
-        if not update_url:
-            update_url = origin_url
-        url = '{url}{project}'.format(url=update_url, project=project)
-        self._update_repo(repo, url, ref)
-        self._clean_repo(repo)
-        self._init_submodules(workspace, repo)
-
-    def _create_repo(self, workspace, url):
-        repo = git.cmd.Git(workspace.path)
-        if not os.path.isdir('{path}/.git'.format(path=workspace.path)):
-            repo.clone(url, '.')
-        return repo
-
-    def _clean_repo(self, repo, reset=False):
-        if reset:
-            repo.remote('update')
-            repo.reset('--hard')
-        repo.clean('-x', '-f', '-d', '-q')
-
-    def _update_repo(self, repo, url, ref):
-        if ref.startswith('refs/tags'):
-            raise scotty.core.exceptions.ScottyException('Checkout of refs/tags not supported')
-        else:
-            repo.fetch(url, ref)
-            repo.checkout('FETCH_HEAD')
-            repo.reset('--hard', 'FETCH_HEAD')
-
-    def _init_submodules(self, workspace, repo):
-        if os.path.isfile('{path}/.gitmodules'.format(path=workspace.path)):
-            repo.submodules('init')
-            repo.submodules('sync')
-            repo.submodules('update', '--init')
 
 
 class Workspace(object):
@@ -68,6 +30,11 @@ class Workspace(object):
                 'Could not find the experiment config file.')
         return path
 
+    @property
+    def workloads_path(self):
+        path = os.path.join(self.path, '.workloads/')
+        return path
+
     @contextlib.contextmanager
     def cwd(self):
         prev_cwd = os.getcwd()
@@ -75,6 +42,21 @@ class Workspace(object):
         yield
         os.chdir(prev_cwd)
 
+
+class ExperimentLoader(object):
+    @classmethod
+    def load_from_workspace(cls, workspace, config):
+        experiment = Experiment()
+        experiment.workspace = workspace
+        experiment.config = config
+        cls._create_workloads_dir(workspace)
+        return experiment
+
+    @classmethod
+    def _create_workloads_dir(cls, workspace):
+        if not os.path.isdir(workspace.workloads_path):
+            os.mkdir(workspace.workloads_path)
+        
 
 class Experiment(object):
     def __init__(self):
@@ -117,7 +99,7 @@ class Workflow(object):
     def __init__(self, options):
         self._options = options
         self._config = utils.Config()
-        self.experiment = None
+        self.workspace = None
 
     def run(self):
         self._prepare()
@@ -127,8 +109,7 @@ class Workflow(object):
 
     def _prepare(self):
         path = os.path.abspath(self._options.workspace)
-        self.experiment = self.experiment or Experiment()
-        self.experiment.workspace = Workspace(path)
+        self.workspace = self.workspace or Workspace(path)
 
     def _checkout(self):
         if self._options.skip_checkout:
@@ -142,35 +123,34 @@ class Workflow(object):
             logger.error(message)
             raise scotty.core.exceptions.ExperimentException(message)
         gerrit_url = self._config.get('gerrit', 'host') + '/p/'
-        workspace = self.experiment.workspace
-        CheckoutManager().checkout(workspace, project, gerrit_url, zuul_url,
-                                   zuul_ref)
+        scotty.checkout.Manager().checkout(self.workspace, 
+                                           project, 
+                                           gerrit_url, 
+                                           zuul_url,
+                                           zuul_ref)
 
     def _load(self):
-        workspace = self.experiment.workspace
-        workloads_path = os.path.join(workspace.path, '.workloads')
-        if not os.path.isdir(workloads_path):
-            os.mkdir(workloads_path)
-        exp_config = ExperimentConfigLoader.load_by_workspace(workspace)
-        self.experiment.config = exp_config
-        for workload_dict in exp_config['workloads']:
-            workload = self._load_workload(workloads_path, workload_dict)
+        config = ExperimentConfigLoader.load_by_workspace(self.workspace)
+        self.experiment = ExperimentLoader().load_from_workspace(self.workspace, config)
+        for workload_config in config['workloads']:
+            workload_path = os.path.join(self.experiment.workspace.workloads_path, 
+                                         workload_config['name'])
+            workload = self._load_workload(workload_path, workload_config)
             self.experiment.add_workload(workload)
 
-    def _load_workload(self, root_path, workload_dict):
-        workload_config = workload_dict
-        path = os.path.join(root_path, workload_config['name'])
+    def _load_workload(self, path, workload_config):
         if not os.path.isdir(path):
             os.mkdir(path)
-        workspace = scotty.core.workload.WorkloadWorkspace(path)
-        gerrit_url = self._config.get('gerrit', 'host') + '/p/'
+        workspace = scotty.core.workload.Workspace(path)
         if not self._options.skip_checkout:
-            # TODO split generator by : into generator and reference
-            generator = workload_config['generator']
-            project = 'workload_gen/{}'.format(generator)
-            CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
-        workload = scotty.core.workload.WorkloadLoader.load_from_workspace(workspace)
-        workload.config = workload_config
+            gerrit_url = self._config.get('gerrit', 'host') + '/p/'
+            project = 'workload_gen/{}'.format(workload_config['generator'])
+            scotty.core.checkout.Manager().checkout(workspace, 
+                                                    project, 
+                                                    gerrit_url, 
+                                                    None, 
+                                                    'master')
+        workload = scotty.core.workload.WorkloadLoader().load_from_workspace(workspace, workload_config)
         return workload
 
     def _run(self):
