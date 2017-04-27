@@ -4,7 +4,6 @@ import contextlib
 import os
 import sys
 
-import git
 import yaml
 
 import scotty.utils as utils
@@ -43,33 +42,14 @@ class WorkloadModuleLoader(object):
 
 
 class Workload(object):
-    @property
-    def module(self):
-        return self._module
-
-    @module.setter
-    def module(self, value):
-        self._module = value
-
-    @property
-    def config(self):
-        return self._config
-
-    @config.setter
-    def config(self, value):
-        self._config = value
-
-    @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, value):
-        self._workspace = value
+    def __init__(self):
+        self.module = None
+        self.config = None
+        self.workspace = None
 
     @property
     def name(self):
-        return self._config['name']
+        return self.config['name']
 
     @property
     def context(self):
@@ -174,7 +154,7 @@ class Workflow(object):
             logger.error(message)
             raise exceptions.WorkloadException(message)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
-        scotty.core.checkout.Manager().checkout(self.workspace, 
+        scotty.core.checkout.Manager().checkout(self.workspace,
                                                 project,
                                                 gerrit_url,
                                                 zuul_url,

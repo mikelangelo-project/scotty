@@ -1,38 +1,38 @@
 import unittest
+import os
 
 import mock
 
-import scotty.core.checkout 
 from scotty.core.experiment import Workspace
+from scotty.core.exceptions import ExperimentException
 
 
-class CheckoutManagerClass(unittest.TestCase):
-    @mock.patch(
-        'git.cmd')
-    def test_checkout(self, git_mock):
-        workspace = Workspace('samples/experiment')
-        checkout_manager = scotty.core.checkout.Manager()
-        checkout_manager.checkout(
-            workspace=workspace,
-            project='project',
-            origin_url='origin_url',
-            update_url='update_url',
-            ref='ref')
-        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/experiment',), {}),
-                          ('Git().clone', ('origin_urlproject', '.'), {}),
-                          ('Git().remote', ('update',), {}),
-                          ('Git().reset', ('--hard',), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
-                          ('Git().fetch', ('update_urlproject', 'ref'), {}),
-                          ('Git().checkout', ('FETCH_HEAD',), {}),
-                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
-        self.assertEquals(unpacked_calls, expected_calls)
+class ExperimentWorkspaceTest(unittest.TestCase):
+    workspace_path = 'samples/experiment'
 
-    def _unpack_calls(self, mock_calls):
-        unpacked_calls = []
-        for mock_call in mock_calls:
-            name, args, kwargs = mock_call
-            unpacked_calls.append((name, args, kwargs))
-        return unpacked_calls
+    def test_workspace_init(self):
+        Workspace(self.workspace_path)
+
+    @mock.patch('os.path.isfile', return_value=False)
+    def test_workspace_no_config(self, isfile_mock):
+        workspace = Workspace(self.workspace_path)
+        with self.assertRaises(ExperimentException):
+            workspace.config_path
+
+    @mock.patch('os.path.isfile', return_value=True)
+    def test_workspace_config_path(self, isfile_mock):
+        workspace = Workspace(self.workspace_path)
+        config_path = workspace.config_path
+        self.assertEquals(config_path, 'samples/experiment/experiment.yaml')
+
+    def test_workloads_path(self):
+        workspace = Workspace(self.workspace_path)
+        workloads_path = workspace.workloads_path
+        self.assertEquals(workloads_path, 'samples/experiment/.workloads/')
+
+    def test_cwd(self):
+        workspace = Workspace(self.workspace_path)
+        with workspace.cwd():
+            wd = os.getcwd()
+        cwd = os.getcwd()
+        self.assertEquals(wd, cwd+'/samples/experiment')

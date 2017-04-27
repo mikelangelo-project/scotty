@@ -3,7 +3,10 @@ import os
 
 import git
 
+from scotty.core.exceptions import ScottyException
+
 logger = logging.getLogger(__name__)
+
 
 class Manager(object):
     def checkout(self, workspace, project, origin_url, update_url, ref):
@@ -31,7 +34,8 @@ class Manager(object):
 
     def _update_repo(self, repo, url, ref):
         if ref.startswith('refs/tags'):
-            raise scotty.core.exceptions.ScottyException('Checkout of refs/tags not supported')
+            raise ScottyException(
+                'Checkout of refs/tags not supported')
         else:
             repo.fetch(url, ref)
             repo.checkout('FETCH_HEAD')

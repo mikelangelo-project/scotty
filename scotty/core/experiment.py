@@ -3,8 +3,6 @@ import os
 import yaml
 import contextlib
 
-import git
-
 import scotty.utils as utils
 import scotty.core.workload
 import scotty.core.exceptions
@@ -61,6 +59,8 @@ class ExperimentLoader(object):
 class Experiment(object):
     def __init__(self):
         self._workloads = {}
+        self.config = None
+        self.workspace = None
 
     def add_workload(self, workload):
         self._workloads[workload.name] = workload
@@ -69,22 +69,6 @@ class Experiment(object):
     @property
     def workloads(self):
         return self._workloads
-
-    @property
-    def config(self):
-        return self._config
-
-    @config.setter
-    def config(self, value):
-        self._config = value
-
-    @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, value):
-        self._workspace = value
 
 
 class ExperimentConfigLoader(object):

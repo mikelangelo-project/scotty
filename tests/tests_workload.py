@@ -4,7 +4,6 @@ import imp
 import os
 
 import mock
-import yaml
 
 import scotty.core.workload as workload
 import scotty.core.exceptions
@@ -119,24 +118,32 @@ class ContextTest(WorkloadTest):
 
 
 class WorkflowTest(WorkloadTest):
-    def test_run_without_project(self):
+    @mock.patch('git.cmd')
+    def test_run_without_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-w', 'samples'])
-        git_actions_expected = [
-            "clone ('https://gerrit/p/zuul_project', '.')",
-            "remote ('update',)", "reset (('--hard',),)",
-            "clean (('-x', '-f', '-d', '-q'),)",
-            "fetch ('zuul_urlzuul_project', 'zuul_ref')",
-            "checkout ('FETCH_HEAD',)", "reset (('--hard', 'FETCH_HEAD'),)",
-            "clean (('-x', '-f', '-d', '-q'),)"
-        ]
-        self._test_run(cli.options, git_actions_expected)
+        self._test_run(cli.options)
+        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
+        expected_calls = [('Git', ('samples/workload/',), {}),
+                          ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
+                          ('Git().remote', ('update',), {}),
+                          ('Git().reset', ('--hard',), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
+                          ('Git().fetch', ('zuul_urlzuul_project', 'zuul_ref'), {}),
+                          ('Git().checkout', ('FETCH_HEAD',), {}),
+                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
+        self.assertEquals(unpacked_calls, expected_calls)
 
-    def _test_run(self, options, git_actions_expected, environ_dict=None):
-        # TODO git mocken und dann diese Zeile wieder entfernen
-        setattr(options, 'skip_checkout', True)
-        # ---
+    def _unpack_calls(self, mock_calls):
+        unpacked_calls = []
+        for mock_call in mock_calls:
+            name, args, kwargs = mock_call
+            unpacked_calls.append((name, args, kwargs))
+        return unpacked_calls
+
+    def _test_run(self, options, environ_dict=None):
         workflow = workload.Workflow(options)
         workflow.workspace = self._workspace
         if environ_dict is None:
@@ -147,41 +154,45 @@ class WorkflowTest(WorkloadTest):
             }
         with mock.patch.dict(os.environ, environ_dict):
             workflow.run()
-#        git_action_log = workflow.workspace._git_repo.action_log
-#        self.assertEqual(git_action_log, git_actions_expected)
 
-    def test_run_with_project(self):
+    @mock.patch('git.cmd')
+    def test_run_with_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-w', 'samples', '-p', 'project'])
-        git_actions_expected = [
-            "clone ('https://gerrit/p/project', '.')", "remote ('update',)",
-            "reset (('--hard',),)", "clean (('-x', '-f', '-d', '-q'),)",
-            "fetch ('zuul_urlproject', 'zuul_ref')",
-            "checkout ('FETCH_HEAD',)", "reset (('--hard', 'FETCH_HEAD'),)",
-            "clean (('-x', '-f', '-d', '-q'),)"
-        ]
-        self._test_run(cli.options, git_actions_expected)
+        self._test_run(cli.options)
+        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
+        expected_calls = [('Git', ('samples/workload/',), {}),
+                          ('Git().clone', ('https://gerrit/p/project', '.'), {}),
+                          ('Git().remote', ('update',), {}),
+                          ('Git().reset', ('--hard',), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
+                          ('Git().fetch', ('zuul_urlproject', 'zuul_ref'), {}),
+                          ('Git().checkout', ('FETCH_HEAD',), {}),
+                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
+        self.assertEquals(unpacked_calls, expected_calls)
 
     def test_without_zuul_settings(self):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-w', 'samples', '-p', 'project'])
-        # TODO uncomment lines after git in workload is mocked again like CheckoutManager
-        #with self.assertRaises(scotty.core.exceptions.WorkloadException):
-        if True:
-            self._test_run(cli.options, git_actions_expected=None, environ_dict={})
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
+            self._test_run(cli.options, environ_dict={})
 
-    def test_with_workload_exception(self):
+    @mock.patch('git.cmd')
+    def test_with_workload_exception(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-w', 'samples'])
-        git_actions_expected = [
-            "clone ('https://gerrit/p/zuul_project', '.')",
-            "remote ('update',)", "reset (('--hard',),)",
-            "clean (('-x', '-f', '-d', '-q'),)",
-            "fetch ('zuul_urlzuul_project', 'zuul_ref')",
-            "checkout ('FETCH_HEAD',)", "reset (('--hard', 'FETCH_HEAD'),)",
-            "clean (('-x', '-f', '-d', '-q'),)"
-        ]
-        self._test_run(cli.options, git_actions_expected)
+        self._test_run(cli.options)
+        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
+        expected_calls = [('Git', ('samples/workload/',), {}),
+                          ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
+                          ('Git().remote', ('update',), {}), ('Git().reset', ('--hard',), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
+                          ('Git().fetch', ('zuul_urlzuul_project', 'zuul_ref'), {}),
+                          ('Git().checkout', ('FETCH_HEAD',), {}),
+                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
+                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
+        self.assertEquals(unpacked_calls, expected_calls)
