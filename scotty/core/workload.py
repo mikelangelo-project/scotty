@@ -8,6 +8,7 @@ import git
 import yaml
 
 import scotty.utils as utils
+from scotty.core import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -97,12 +98,12 @@ class WorkloadWorkspace(object):
         if not os.path.isdir(config_dir):
             config_dir = os.path.join(self.path, 'samples')
         if not os.path.isdir(config_dir):
-            raise WorkloadException('Could not find a config directory.')
+            raise exceptions.WorkloadException('Could not find a config directory.')
         config_path = os.path.join(config_dir, 'workload.yaml')
         if not os.path.isfile(config_path):
             config_path = os.path.join(config_dir, 'workload.yml')
         if not os.path.isfile(config_path):
-            raise WorkloadException('Could not find the config file.')
+            raise exceptions.WorkloadException('Could not find the config file.')
         return config_path
 
     @property
@@ -111,7 +112,7 @@ class WorkloadWorkspace(object):
         if not os.path.isfile(workload_path):
             workload_path = os.path.join(self.path, 'run.py')
         if not os.path.isfile(workload_path):
-            raise WorkloadException('Could not find the workload module')
+            raise exceptions.WorkloadException('Could not find the workload module')
         return workload_path
 
     @contextlib.contextmanager
@@ -151,7 +152,7 @@ class WorkloadWorkspace(object):
 
     def _update_repo_from_zuul(self, git_repo, zuul_ref, zuul_url, project):
         if zuul_ref.startswith('refs/tags'):
-            raise WorkloadException('Checkout of refs/tags not supported')
+            raise exceptions.WorkloadException('Checkout of refs/tags not supported')
         else:
             logger.info('    Fetch from zuul merger')
             zuul_git_url = '{z}{p}'.format(z=zuul_url, p=project)
@@ -251,15 +252,13 @@ class Workflow(object):
         if self._options.skip_checkout:
             return
         try:
-            if self._options.project:
-                project = self._options.project
-            else:
-                project = os.environ['ZUUL_PROJECT']
+            project = self._options.project or os.environ['ZUUL_PROJECT']
             zuul_url = os.environ['ZUUL_URL']
             zuul_ref = os.environ['ZUUL_REF']
         except KeyError as e:
-            logger.error('Missing environment key ({})'.format(e))
-            raise WorkloadException('Missing Zuul settings')
+            message = 'Missing zuul setting ({})'.format(e)
+            logger.error(message)
+            raise exceptions.WorkloadException(message)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
         self.workspace.checkout(project, gerrit_url, zuul_url, zuul_ref)
 
@@ -276,11 +275,3 @@ class Workflow(object):
                     workload_.run(self._context)
                 except:
                     logger.exception('Error from customer workload generator')
-
-
-class WorkloadException(Exception):
-    pass
-
-
-class WorkloadPluginException(Exception):
-    pass

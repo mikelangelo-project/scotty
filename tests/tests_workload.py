@@ -7,6 +7,7 @@ import mock
 import yaml
 
 import scotty.core.workload as workload
+import scotty.core.exceptions
 from scotty.cli import Cli
 
 
@@ -69,13 +70,13 @@ class WorkloadWorkspaceTest(WorkloadTest):
     def test_fail_config_dir(self, isfile_mock, isdir_mock):
         isfile_mock.return_value = True
         isdir_mock.return_value = False
-        with self.assertRaises(workload.WorkloadException):
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._workspace.config_path
 
     @mock.patch('os.path.isfile')
     def test_fail_config_path(self, isfile_mock):
         isfile_mock.return_value = False
-        with self.assertRaises(workload.WorkloadException):
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._workspace.config_path
 
     def test_workload_path(self):
@@ -85,7 +86,7 @@ class WorkloadWorkspaceTest(WorkloadTest):
     @mock.patch('os.path.isfile')
     def test_fail_workload_path(self, isfile_mock):
         isfile_mock.return_value = False
-        with self.assertRaises(workload.WorkloadException):
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._workspace.workload_path
 
     def test_cwd(self):
@@ -111,7 +112,7 @@ class WorkloadWorkspaceTest(WorkloadTest):
         self.assertEquals(action_log, action_log_expected)
 
     def test_checkout_refs_tags(self):
-        with self.assertRaises(workload.WorkloadException):
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._workspace.checkout(
                 project='project',
                 gerrit_url='gerrit_url',
@@ -207,7 +208,7 @@ class WorkflowTest(WorkloadTest):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-w', 'samples', '-p', 'project'])
-        with self.assertRaises(workload.WorkloadException):
+        with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._test_run(cli.options, git_actions_expected=None, environ_dict={})
 
     def test_with_workload_exception(self):
