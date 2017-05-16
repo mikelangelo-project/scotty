@@ -53,7 +53,7 @@ class Workload(object):
 
     @property
     def context(self):
-        return Context(self._config)
+        return Context(self.config)
 
 
 class WorkloadLoader(object):
@@ -104,10 +104,15 @@ class Workspace(object):
 
 class WorkloadConfigLoader(object):
     @classmethod
-    def load_by_workspace(cls, workspace):
-        with open(workspace.config_path, 'r') as stream:
-            dict_ = yaml.load(stream)
-        return dict_['workload']
+    def load_by_path(cls, path):
+        try:
+            with open(path, 'r') as stream:
+                dict_ = yaml.load(stream)
+            return dict_['workload']
+        except IOError as e:
+            logger.error("I/O error({0}): {1}".format(e.errno, e.strerror))
+            logger.error("Failed to load workload config: {0}".format(path))
+            sys.exit(1)
 
 
 class BaseContext(object):
@@ -130,6 +135,7 @@ class ContextV1(BaseContext):
 class Workflow(object):
     def __init__(self, options):
         self._options = options
+        self._checkout_manager = scotty.core.checkout.Manager()
         self.workspace = None
 
     def run(self):
@@ -154,14 +160,14 @@ class Workflow(object):
             logger.error(message)
             raise exceptions.WorkloadException(message)
         gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
-        scotty.core.checkout.Manager().checkout(self.workspace,
-                                                project,
-                                                gerrit_url,
-                                                zuul_url,
-                                                zuul_ref)
+        self._checkout_manager.checkout(self.workspace,
+                                        project,
+                                        gerrit_url,
+                                        zuul_url,
+                                        zuul_ref)
 
     def _load(self):
-        config = WorkloadConfigLoader.load_by_workspace(self.workspace)
+        config = WorkloadConfigLoader.load_by_path(self._options.config)
         self.workload = WorkloadLoader().load_from_workspace(self.workspace, config)
 
     def _run(self):

@@ -26,6 +26,12 @@ class RunParser(CommandParser):
             action='store',
             required=True)
         parser.add_argument(
+            '-c', '--config',
+            help='Path to workload config',
+            dest='config',
+            action='store',
+            required=True)
+        parser.add_argument(
             '-m', '--mock',
             help='Do not run the workload',
             dest='mock',
