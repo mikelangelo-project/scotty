@@ -72,20 +72,6 @@ class Workspace(object):
         self.path = path
 
     @property
-    def config_path(self):
-        config_dir = os.path.join(self.path, 'test')
-        if not os.path.isdir(config_dir):
-            config_dir = os.path.join(self.path, 'samples')
-        if not os.path.isdir(config_dir):
-            raise exceptions.WorkloadException('Could not find a config directory.')
-        config_path = os.path.join(config_dir, 'workload.yaml')
-        if not os.path.isfile(config_path):
-            config_path = os.path.join(config_dir, 'workload.yml')
-        if not os.path.isfile(config_path):
-            raise exceptions.WorkloadException('Could not find the config file.')
-        return config_path
-
-    @property
     def module_path(self):
         module_path = os.path.join(self.path, 'workload_gen.py')
         if not os.path.isfile(module_path):

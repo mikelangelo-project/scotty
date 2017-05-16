@@ -19,7 +19,7 @@ class WorkloadTest(unittest.TestCase):
 
     def _get_workload_config(self):
         workload_config = workload.WorkloadConfigLoader.load_by_path(
-            self._workspace.config_path)
+            self.workspace_path + 'workload.yaml')
         return workload_config
 
 
@@ -58,25 +58,6 @@ class WorkloadModuleLoaderTest(WorkloadTest):
 
 
 class WorkloadWorkspaceTest(WorkloadTest):
-    def test_config_path(self):
-        config_path = self._workspace.config_path
-        config_path_expected = self.workspace_path + 'samples/workload.yaml'
-        self.assertEquals(config_path, config_path_expected)
-
-    @mock.patch('os.path.isdir')
-    @mock.patch('os.path.isfile')
-    def test_fail_config_dir(self, isfile_mock, isdir_mock):
-        isfile_mock.return_value = True
-        isdir_mock.return_value = False
-        with self.assertRaises(scotty.core.exceptions.WorkloadException):
-            self._workspace.config_path
-
-    @mock.patch('os.path.isfile')
-    def test_fail_config_path(self, isfile_mock):
-        isfile_mock.return_value = False
-        with self.assertRaises(scotty.core.exceptions.WorkloadException):
-            self._workspace.config_path
-
     def test_module_path(self):
         module_path = self._workspace.module_path
         self.assertEquals(module_path, 'samples/component/workload/workload_gen.py')
@@ -103,7 +84,7 @@ class WorkloadConfigLoaderTest(WorkloadTest):
 class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
         workload_config = workload.WorkloadConfigLoader.load_by_path(
-            self._workspace.config_path)
+            self.workspace_path + 'workload.yaml')
         self.assertEquals(workload_config['name'], 'sample_workload')
         self.assertEquals(workload_config['generator'], 'sample')
         self.assertTrue(isinstance(workload_config['params'], dict))
