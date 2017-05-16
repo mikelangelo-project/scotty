@@ -6,6 +6,7 @@ from scotty.cmd.base import CommandRegistry
 import scotty.cmd.legacy
 import scotty.cmd.workload
 import scotty.cmd.experiment
+import scotty.cmd.resource
 
 
 class Cli(object):
