@@ -18,8 +18,8 @@ class WorkloadTest(unittest.TestCase):
         self._workspace = workload.Workspace(self.workspace_path)
 
     def _get_workload_config(self):
-        workload_config = workload.WorkloadConfigLoader.load_by_workspace(
-            self._workspace)
+        workload_config = workload.WorkloadConfigLoader.load_by_path(
+            self._workspace.config_path)
         return workload_config
 
 
@@ -102,8 +102,8 @@ class WorkloadConfigLoaderTest(WorkloadTest):
 
 class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
-        workload_config = workload.WorkloadConfigLoader.load_by_workspace(
-            self._workspace)
+        workload_config = workload.WorkloadConfigLoader.load_by_path(
+            self._workspace.config_path)
         self.assertEquals(workload_config['name'], 'sample_workload')
         self.assertEquals(workload_config['generator'], 'sample')
         self.assertTrue(isinstance(workload_config['params'], dict))
@@ -122,7 +122,7 @@ class WorkflowTest(WorkloadTest):
     def test_run_without_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-w', 'samples'])
+        cli.parse_command_options(['run', '-c', 'samples/workload/workload.yaml', '-w', 'samples'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
         expected_calls = [('Git', ('samples/workload/',), {}),
@@ -159,7 +159,7 @@ class WorkflowTest(WorkloadTest):
     def test_run_with_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-w', 'samples', '-p', 'project'])
+        cli.parse_command_options(['run', '-c', 'samples/workload/workload.yaml', '-w', 'samples', '-p', 'project'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
         expected_calls = [('Git', ('samples/workload/',), {}),
@@ -176,7 +176,7 @@ class WorkflowTest(WorkloadTest):
     def test_without_zuul_settings(self):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-w', 'samples', '-p', 'project'])
+        cli.parse_command_options(['run', '-c', 'samples/workload/workload.yaml', '-w', 'samples', '-p', 'project'])
         with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._test_run(cli.options, environ_dict={})
 
@@ -184,7 +184,7 @@ class WorkflowTest(WorkloadTest):
     def test_with_workload_exception(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-w', 'samples'])
+        cli.parse_command_options(['run', '-c', 'samples/workload/workload.yaml', '-w', 'samples'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
         expected_calls = [('Git', ('samples/workload/',), {}),

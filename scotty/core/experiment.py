@@ -83,6 +83,7 @@ class Workflow(object):
     def __init__(self, options):
         self._options = options
         self._config = utils.Config()
+        self._checkout_manager = scotty.core.checkout.Manager()
         self.workspace = None
 
     def run(self):
@@ -107,11 +108,11 @@ class Workflow(object):
             logger.error(message)
             raise scotty.core.exceptions.ExperimentException(message)
         gerrit_url = self._config.get('gerrit', 'host') + '/p/'
-        scotty.checkout.Manager().checkout(self.workspace, 
-                                           project, 
-                                           gerrit_url, 
-                                           zuul_url,
-                                           zuul_ref)
+        self._checkout_manager.checkout(self.workspace, 
+                                        project, 
+                                        gerrit_url, 
+                                        zuul_url,
+                                        zuul_ref)
 
     def _load(self):
         config = ExperimentConfigLoader.load_by_workspace(self.workspace)

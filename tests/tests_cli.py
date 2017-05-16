@@ -22,7 +22,7 @@ class CliTest(object):
 
 
 class CliWorkloadTest(CliTest, unittest.TestCase):
-    args = ['./scotty.py', 'workload', 'run', '-w', 'samples/workload/', '-s']
+    args = ['./scotty.py', 'workload', 'run', '-c', 'samples/workload/workload.yaml', '-w', 'samples/workload/', '-s']
 
     def test_parse_workload_command(self):
         cli_ = cli.Cli()
