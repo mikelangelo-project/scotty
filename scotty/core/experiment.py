@@ -43,10 +43,10 @@ class Workspace(object):
 
 class ExperimentLoader(object):
     @classmethod
-    def load_from_workspace(cls, workspace, config):
+    def load_from_workspace(cls, workspace, experiment_config):
         experiment = Experiment()
         experiment.workspace = workspace
-        experiment.config = config
+        experiment.config = experiment_config
         cls._create_workloads_dir(workspace)
         return experiment
 
@@ -54,7 +54,7 @@ class ExperimentLoader(object):
     def _create_workloads_dir(cls, workspace):
         if not os.path.isdir(workspace.workloads_path):
             os.mkdir(workspace.workloads_path)
-        
+
 
 class Experiment(object):
     def __init__(self):
@@ -64,7 +64,6 @@ class Experiment(object):
 
     def add_workload(self, workload):
         self._workloads[workload.name] = workload
-        pass
 
     @property
     def workloads(self):
@@ -108,18 +107,17 @@ class Workflow(object):
             logger.error(message)
             raise scotty.core.exceptions.ExperimentException(message)
         gerrit_url = self._config.get('gerrit', 'host') + '/p/'
-        self._checkout_manager.checkout(self.workspace, 
-                                        project, 
-                                        gerrit_url, 
-                                        zuul_url,
-                                        zuul_ref)
+        self._checkout_manager.checkout(self.workspace, project, gerrit_url,
+                                        zuul_url, zuul_ref)
 
     def _load(self):
         config = ExperimentConfigLoader.load_by_workspace(self.workspace)
-        self.experiment = ExperimentLoader().load_from_workspace(self.workspace, config)
+        self.experiment = ExperimentLoader().load_from_workspace(
+            self.workspace, config)
         for workload_config in config['workloads']:
-            workload_path = os.path.join(self.experiment.workspace.workloads_path, 
-                                         workload_config['name'])
+            workload_path = os.path.join(
+                self.experiment.workspace.workloads_path,
+                workload_config['name'])
             workload = self._load_workload(workload_path, workload_config)
             self.experiment.add_workload(workload)
 
@@ -130,17 +128,16 @@ class Workflow(object):
         if not self._options.skip_checkout:
             gerrit_url = self._config.get('gerrit', 'host') + '/p/'
             project = 'workload_gen/{}'.format(workload_config['generator'])
-            scotty.core.checkout.Manager().checkout(workspace, 
-                                                    project, 
-                                                    gerrit_url, 
-                                                    None, 
-                                                    'master')
-        workload = scotty.core.workload.WorkloadLoader().load_from_workspace(workspace, workload_config)
+            scotty.core.checkout.Manager().checkout(workspace, project,
+                                                    gerrit_url, None, 'master')
+        workload = scotty.core.workload.WorkloadLoader().load_from_workspace(
+            workspace, workload_config)
         return workload
 
     def _run(self):
         if not self._options.mock:
-            for workload_name, workload in self.experiment.workloads.iteritems():
+            for workload_name, workload in self.experiment.workloads.iteritems(
+            ):
                 with self.experiment.workspace.cwd():
                     try:
                         context = workload.context
