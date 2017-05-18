@@ -2,7 +2,7 @@ import sys
 import argparse
 
 from scotty.cmd.base import CommandRegistry
-# The imports are not used, by are required to load the commands on startup.
+# The imports are not used, but are required to load the commands on startup.
 import scotty.cmd.legacy
 import scotty.cmd.workload
 import scotty.cmd.experiment
@@ -10,7 +10,6 @@ import scotty.cmd.resource
 
 
 class Cli(object):
-
     def parse_command(self, args):
         parser = argparse.ArgumentParser()
         subparser = parser.add_subparsers(dest='command')
