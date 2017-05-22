@@ -42,7 +42,7 @@ class CliWorkloadTest(CliTest, unittest.TestCase):
 
 class CliExperimentTest(CliTest, unittest.TestCase):
     args = [
-        './scotty.py', 'experiment', 'run', '-w', 'samples/components/experiment', '-s'
+        './scotty.py', 'experiment', 'perform', '-w', 'samples/components/experiment', '-s'
     ]
 
     def test_parse_experiment_command(self):
@@ -55,7 +55,7 @@ class CliExperimentTest(CliTest, unittest.TestCase):
         cli_.parse_command(self.args[1:2])
         cli_.parse_command_options(self.args[2:])
         print cli_.options
-        self.assertEquals(cli_.options.action, 'run')
+        self.assertEquals(cli_.options.action, 'perform')
         self.assertFalse(cli_.options.mock)
         self.assertIsNone(cli_.options.project)
         self.assertTrue(cli_.options.skip_checkout)

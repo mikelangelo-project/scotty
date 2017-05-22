@@ -13,11 +13,11 @@ class ExperimentParser(CommandParser):
         subparsers = parser.add_subparsers(
             help='Action',
             dest='action')
-        runparser = subparsers.add_parser('run')
-        RunParser().add_arguments(runparser)
+        performparser = subparsers.add_parser('perform')
+        PerformParser().add_arguments(performparser)
 
 
-class RunParser(CommandParser):
+class PerformParser(CommandParser):
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--workspace',
@@ -39,7 +39,7 @@ class RunParser(CommandParser):
             action='store_true')
         parser.add_argument(
             '-p', '--project',
-            help='Experiment project to run',
+            help='Experiment project to perform',
             dest='project',
             action='store')
 
@@ -50,6 +50,6 @@ class Command(object):
         self.options = options
 
     def execute(self):
-        if self.options.action == 'run':
+        if self.options.action == 'perform':
             workflow = experiment.Workflow(self.options)
-            workflow.run()
+            workflow.perform()

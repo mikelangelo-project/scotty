@@ -85,11 +85,11 @@ class Workflow(object):
         self._checkout_manager = scotty.core.checkout.Manager()
         self.workspace = None
 
-    def run(self):
+    def perform(self):
         self._prepare()
         self._checkout()
         self._load()
-        self._run()
+        self._perform()
 
     def _prepare(self):
         path = os.path.abspath(self._options.workspace)
@@ -134,7 +134,7 @@ class Workflow(object):
             workspace, workload_config)
         return workload
 
-    def _run(self):
+    def _perform(self):
         if not self._options.mock:
             for workload_name, workload in self.experiment.workloads.iteritems(
             ):

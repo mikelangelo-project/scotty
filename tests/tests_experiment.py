@@ -96,9 +96,9 @@ class WorkflowTest(unittest.TestCase):
     @mock.patch('scotty.core.experiment.Workflow._prepare')
     @mock.patch('scotty.core.experiment.Workflow._checkout')
     @mock.patch('scotty.core.experiment.Workflow._load')
-    @mock.patch('scotty.core.experiment.Workflow._run')
+    @mock.patch('scotty.core.experiment.Workflow._perform')
     def test_run(self, prepare_mock, checkout_mock, load_mock, run_mock):
-        self.workflow.run()
+        self.workflow.perform()
         prepare_mock.assert_called()
         checkout_mock.assert_called()
         load_mock.assert_called()
