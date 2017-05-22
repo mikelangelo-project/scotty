@@ -64,11 +64,11 @@ class Workflow(object):
         self._module_loader = ModuleLoader('scotty.component.resource__gen', 'anonymous_resource')
         self.resource = None
 
-    def create(self):
+    def deploy(self):
         self._prepare()
         self._checkout()
         self._load()
-        self._run()
+        self._deploy()
 
     def _prepare(self):
         if not self.resource:
@@ -84,6 +84,6 @@ class Workflow(object):
     def _load(self):
         pass
 
-    def _run(self):
+    def _deploy(self):
         if not self._options.mock:
             pass
