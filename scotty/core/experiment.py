@@ -3,7 +3,7 @@ import os
 import yaml
 import contextlib
 
-import scotty.utils as utils
+from scotty.config import ScottyConfig
 import scotty.core.workload
 import scotty.core.exceptions
 import scotty.core.checkout
@@ -81,7 +81,7 @@ class ExperimentConfigLoader(object):
 class Workflow(object):
     def __init__(self, options):
         self._options = options
-        self._config = utils.Config()
+        self._scotty_config = ScottyConfig()
         self._checkout_manager = scotty.core.checkout.Manager()
         self.workspace = None
 
@@ -106,7 +106,7 @@ class Workflow(object):
             message = 'Missing Zuul settings ({})'.format(e)
             logger.error(message)
             raise scotty.core.exceptions.ExperimentException(message)
-        gerrit_url = self._config.get('gerrit', 'host') + '/p/'
+        gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
         self._checkout_manager.checkout(self.workspace, project, gerrit_url,
                                         zuul_url, zuul_ref)
 
@@ -126,7 +126,7 @@ class Workflow(object):
             os.mkdir(path)
         workspace = scotty.core.workload.Workspace(path)
         if not self._options.skip_checkout:
-            gerrit_url = self._config.get('gerrit', 'host') + '/p/'
+            gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
             project = 'workload_gen/{}'.format(workload_config['generator'])
             scotty.core.checkout.Manager().checkout(workspace, project,
                                                     gerrit_url, None, 'master')

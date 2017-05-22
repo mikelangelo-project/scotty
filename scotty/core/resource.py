@@ -4,6 +4,7 @@ import contextlib
 import os
 import sys
 
+from scotty.config import ScottyConfig
 import scotty.core.checkout
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class Workflow(object):
         self._checkout_manager = scotty.core.checkout.Manager()
         self._module_loader = ModuleLoader('scotty.component.resource__gen', 'anonymous_resource')
         self.resource = None
+        self._scotty_config = ScottyConfig()
 
     def deploy(self):
         self._prepare()

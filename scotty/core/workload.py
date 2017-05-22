@@ -6,7 +6,7 @@ import sys
 
 import yaml
 
-import scotty.utils as utils
+from scotty.config import ScottyConfig
 import scotty.core.experiment
 import scotty.core.checkout
 from scotty.core import exceptions
@@ -123,6 +123,7 @@ class Workflow(object):
         self._options = options
         self._checkout_manager = scotty.core.checkout.Manager()
         self.workspace = None
+        self._scotty_config = ScottyConfig()
 
     def run(self):
         self._prepare()
@@ -145,7 +146,7 @@ class Workflow(object):
             message = 'Missing zuul setting ({})'.format(e)
             logger.error(message)
             raise exceptions.WorkloadException(message)
-        gerrit_url = utils.Config().get('gerrit', 'host') + '/p/'
+        gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
         self._checkout_manager.checkout(self.workspace,
                                         project,
                                         gerrit_url,
