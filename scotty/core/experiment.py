@@ -6,7 +6,7 @@ import contextlib
 from scotty.config import ScottyConfig
 import scotty.core.workload
 import scotty.core.exceptions
-import scotty.core.checkout
+from scotty.core.checkout import CheckoutManager
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class Workflow(object):
     def __init__(self, options):
         self._options = options
         self._scotty_config = ScottyConfig()
-        self._checkout_manager = scotty.core.checkout.Manager()
+        self._checkout_manager = CheckoutManager()
         self.workspace = None
 
     def perform(self):
@@ -128,8 +128,7 @@ class Workflow(object):
         if not self._options.skip_checkout:
             gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
             project = 'workload_gen/{}'.format(workload_config['generator'])
-            scotty.core.checkout.Manager().checkout(workspace, project,
-                                                    gerrit_url, None, 'master')
+            CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
         workload = scotty.core.workload.WorkloadLoader().load_from_workspace(
             workspace, workload_config)
         return workload

@@ -8,7 +8,7 @@ from scotty.core.exceptions import ScottyException
 logger = logging.getLogger(__name__)
 
 
-class Manager(object):
+class CheckoutManager(object):
     def checkout(self, workspace, project, origin_url, update_url, ref):
         url = '{url}{project}'.format(url=origin_url, project=project)
         repo = self._create_repo(workspace, url)

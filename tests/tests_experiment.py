@@ -119,7 +119,7 @@ class WorkflowTest(unittest.TestCase):
         self.workflow._checkout()
 
     @mock.patch('os.environ', return_value='zuul_env')
-    @mock.patch('scotty.core.checkout.Manager.checkout')
+    @mock.patch('scotty.core.checkout.CheckoutManager.checkout')
     def test_checkout(self, checkout_mock, environ_mock):
         options_mock = mock.MagicMock(
             project='test_project', skip_checkout=False)
@@ -135,7 +135,7 @@ class WorkflowTest(unittest.TestCase):
             self.workflow._checkout()
 
     @mock.patch('scotty.core.workload.WorkloadLoader.load_from_workspace')
-    @mock.patch('scotty.core.checkout.Manager.checkout')
+    @mock.patch('scotty.core.checkout.CheckoutManager.checkout')
     @mock.patch('os.path.isdir', return_value=False)
     @mock.patch('os.mkdir')
     def test_load_workload(self, mkdir_mock, isdir_mock, checkout_mock,

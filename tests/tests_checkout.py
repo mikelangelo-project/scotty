@@ -2,7 +2,7 @@ import unittest
 
 import mock
 
-import scotty.core.checkout
+from scotty.core.checkout import CheckoutManager
 from scotty.core.experiment import Workspace
 from scotty.core.exceptions import ScottyException
 
@@ -11,7 +11,7 @@ class CheckoutManagerTest(unittest.TestCase):
     @mock.patch('git.cmd')
     def test_checkout(self, git_mock):
         workspace = Workspace('samples/components/experiment')
-        checkout_manager = scotty.core.checkout.Manager()
+        checkout_manager = CheckoutManager()
         checkout_manager.checkout(
             workspace=workspace,
             project='project',
@@ -38,7 +38,7 @@ class CheckoutManagerTest(unittest.TestCase):
         return unpacked_calls
 
     def test_refs_tags(self):
-        checkout_manager = scotty.core.checkout.Manager()
+        checkout_manager = CheckoutManager()
         with self.assertRaises(ScottyException):
             checkout_manager._update_repo(repo=None, url=None, ref='refs/tags')
 
@@ -48,7 +48,7 @@ class CheckoutManagerTest(unittest.TestCase):
         repo_mock.submodules.return_value = None
         workspace_mock = mock.MagicMock()
         workspace_mock.path.return_value = ''
-        checkout_manager = scotty.core.checkout.Manager()
+        checkout_manager = CheckoutManager()
         checkout_manager._init_submodules(workspace=workspace_mock, repo=repo_mock)
         workspace_mock.path.__str__.assert_called_once()
         unpacked_calls = self._unpack_calls(repo_mock.mock_calls)

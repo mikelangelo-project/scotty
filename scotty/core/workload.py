@@ -8,7 +8,7 @@ import yaml
 
 from scotty.config import ScottyConfig
 import scotty.core.experiment
-import scotty.core.checkout
+from scotty.core.checkout import CheckoutManager
 from scotty.core import exceptions
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class ContextV1(BaseContext):
 class Workflow(object):
     def __init__(self, options):
         self._options = options
-        self._checkout_manager = scotty.core.checkout.Manager()
+        self._checkout_manager = CheckoutManager()
         self.workspace = None
         self._scotty_config = ScottyConfig()
 
