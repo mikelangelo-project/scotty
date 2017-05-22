@@ -32,3 +32,11 @@ Run the Tests
 
     python-coverage run --source=. -m unittest discover -s tests/
     python-coverage report -m --omit=scotty/legacy/*,scotty/cmd/legacy.py
+    
+Rebase changed master into your feature/<branch>
+-------------
+
+    git checkout feature/<branch>
+    git fetch
+    git rebase origin/master
+    git push
