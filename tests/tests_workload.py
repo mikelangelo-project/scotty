@@ -11,8 +11,8 @@ from scotty.cli import Cli
 
 
 class WorkloadTest(unittest.TestCase):
-    workload_path = 'samples/component/workload/workload_gen.py'
-    workspace_path = 'samples/component/workload/'
+    workload_path = 'samples/components/workload/workload_gen.py'
+    workspace_path = 'samples/components/workload/'
 
     def setUp(self):
         self._workspace = workload.Workspace(self.workspace_path)
@@ -60,7 +60,7 @@ class WorkloadModuleLoaderTest(WorkloadTest):
 class WorkloadWorkspaceTest(WorkloadTest):
     def test_module_path(self):
         module_path = self._workspace.module_path
-        self.assertEquals(module_path, 'samples/component/workload/workload_gen.py')
+        self.assertEquals(module_path, 'samples/components/workload/workload_gen.py')
 
     @mock.patch('os.path.isfile')
     def test_fail_module_path(self, isfile_mock):
@@ -103,10 +103,10 @@ class WorkflowTest(WorkloadTest):
     def test_run_without_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', ('samples/components/workload/',), {}),
                           ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),
@@ -140,10 +140,10 @@ class WorkflowTest(WorkloadTest):
     def test_run_with_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload', '-p', 'project'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', ('samples/components/workload/',), {}),
                           ('Git().clone', ('https://gerrit/p/project', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),
@@ -157,7 +157,7 @@ class WorkflowTest(WorkloadTest):
     def test_without_zuul_settings(self):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload', '-p', 'project'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
         with self.assertRaises(scotty.core.exceptions.WorkloadException):
             self._test_run(cli.options, environ_dict={})
 
@@ -165,10 +165,10 @@ class WorkflowTest(WorkloadTest):
     def test_with_workload_exception(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', ('samples/components/workload/',), {}),
                           ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
                           ('Git().remote', ('update',), {}), ('Git().reset', ('--hard',), {}),
                           ('Git().clean', ('-x', '-f', '-d', '-q'), {}),

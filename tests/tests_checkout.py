@@ -10,7 +10,7 @@ from scotty.core.exceptions import ScottyException
 class CheckoutManagerTest(unittest.TestCase):
     @mock.patch('git.cmd')
     def test_checkout(self, git_mock):
-        workspace = Workspace('samples/component/experiment')
+        workspace = Workspace('samples/components/experiment')
         checkout_manager = scotty.core.checkout.Manager()
         checkout_manager.checkout(
             workspace=workspace,
@@ -19,7 +19,7 @@ class CheckoutManagerTest(unittest.TestCase):
             update_url=None,
             ref='ref')
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/experiment',), {}),
+        expected_calls = [('Git', ('samples/components/experiment',), {}),
                           ('Git().clone', ('origin_urlproject', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),

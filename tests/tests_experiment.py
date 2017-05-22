@@ -12,7 +12,7 @@ from scotty.core.workload import Workload
 from scotty.core.exceptions import ExperimentException
 
 
-def mock_workspace(workspace_path='samples/component/experiment'):
+def mock_workspace(workspace_path='samples/components/experiment'):
     return Workspace(workspace_path)
 
 
@@ -36,20 +36,20 @@ class ExperimentWorkspaceTest(unittest.TestCase):
         workspace = mock_workspace()
         config_path = workspace.config_path
         self.assertEquals(config_path,
-                          'samples/component/experiment/experiment.yaml')
+                          'samples/components/experiment/experiment.yaml')
 
     def test_workloads_path(self):
         workspace = mock_workspace()
         workloads_path = workspace.workloads_path
         self.assertEquals(workloads_path,
-                          'samples/component/experiment/.workloads/')
+                          'samples/components/experiment/.workloads/')
 
     def test_cwd(self):
         workspace = mock_workspace()
         with workspace.cwd():
             wd = os.getcwd()
         cwd = os.getcwd()
-        self.assertEquals(wd, cwd + '/samples/component/experiment')
+        self.assertEquals(wd, cwd + '/samples/components/experiment')
 
 
 class ExperimentLoaderTest(unittest.TestCase):
