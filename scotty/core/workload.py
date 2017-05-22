@@ -10,35 +10,9 @@ from scotty.config import ScottyConfig
 import scotty.core.experiment
 from scotty.core.checkout import CheckoutManager
 from scotty.core import exceptions
+from scotty.core.moduleloader import ModuleLoader 
 
 logger = logging.getLogger(__name__)
-
-
-class WorkloadModuleLoader(object):
-    @classmethod
-    def load_by_path(cls, path, name='anonymous_workload'):
-        cls._initparentmodule('scotty.workload_gen')
-        cls._addmodulepath(path)
-        module_name = "scotty.workload_gen.{name}".format(name=name)
-        workload_ = imp.load_source(module_name, path)
-        return workload_
-
-    @classmethod
-    def load_by_workspace(cls, workspace, name='anonymous_workload'):
-        workload_ = cls.load_by_path(workspace.module_path, name)
-        return workload_
-
-    @classmethod
-    def _initparentmodule(cls, parent_mod_name):
-        parent_mod = sys.modules.setdefault(parent_mod_name,
-                                            imp.new_module(parent_mod_name))
-        parent_mod.__file__ = '<virtual {}>'.format(parent_mod_name)
-
-    @classmethod
-    def _addmodulepath(cls, module_path):
-        path = os.path.dirname(os.path.abspath(module_path))
-        logger.info('path: {}'.format(path))
-        sys.path.insert(0, path)
 
 
 class Workload(object):
@@ -59,7 +33,8 @@ class Workload(object):
 class WorkloadLoader(object):
     @classmethod
     def load_from_workspace(cls, workspace, config):
-        module_ = WorkloadModuleLoader.load_by_workspace(workspace, config['name'])
+        module_loader = ModuleLoader('scotty.workload_gen', 'anonymous_workload')
+        module_ = module_loader.load_by_path(workspace.module_path, config['name'])
         workload = Workload()
         workload.workspace = workspace
         workload.module = module_
