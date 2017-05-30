@@ -4,7 +4,8 @@ import yaml
 import contextlib
 
 from scotty.config import ScottyConfig
-import scotty.core.workload
+from scotty.core.moduleloader import ModuleLoader
+from scotty.core.workload import Workload
 import scotty.core.exceptions
 from scotty.core.checkout import CheckoutManager
 
@@ -82,6 +83,7 @@ class Workflow(object):
     def __init__(self, options):
         self._options = options
         self._scotty_config = ScottyConfig()
+        self._module_loader = ModuleLoader('scotty.workload_gen', 'anonymous_workload')
         self._checkout_manager = CheckoutManager()
         self.workspace = None
 
@@ -129,8 +131,11 @@ class Workflow(object):
             gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
             project = 'workload_gen/{}'.format(workload_config['generator'])
             CheckoutManager().checkout(workspace, project, gerrit_url, None, 'master')
-        workload = scotty.core.workload.WorkloadLoader().load_from_workspace(
-            workspace, workload_config)
+        workload = Workload()
+        workload.config = workload_config
+        workload.workspace = workspace
+        workload.module = self._module_loader.load_by_path(
+            workload.module_path, workload_config['name'])
         return workload
 
     def _perform(self):

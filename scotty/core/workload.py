@@ -7,10 +7,10 @@ import sys
 import yaml
 
 from scotty.config import ScottyConfig
-import scotty.core.experiment
 from scotty.core.checkout import CheckoutManager
 from scotty.core import exceptions
 from scotty.core.moduleloader import ModuleLoader 
+from scotty.core.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -26,41 +26,12 @@ class Workload(object):
         return self.config['name']
 
     @property
-    def context(self):
-        return Context(self.config)
-
-
-class WorkloadLoader(object):
-    @classmethod
-    def load_from_workspace(cls, workspace, config):
-        module_loader = ModuleLoader('scotty.workload_gen', 'anonymous_workload')
-        module_ = module_loader.load_by_path(workspace.module_path, config['name'])
-        workload = Workload()
-        workload.workspace = workspace
-        workload.module = module_
-        workload.config = config
-        return workload
-
-
-class Workspace(object):
-    def __init__(self, path):
-        self.path = path
+    def module_path(self):
+        return os.path.join(self.workspace.path, 'workload_gen.py')
 
     @property
-    def module_path(self):
-        module_path = os.path.join(self.path, 'workload_gen.py')
-        if not os.path.isfile(module_path):
-            module_path = os.path.join(self.path, 'run.py')
-        if not os.path.isfile(module_path):
-            raise exceptions.WorkloadException('Could not find the workload module')
-        return module_path
-
-    @contextlib.contextmanager
-    def cwd(self):
-        prev_cwd = os.getcwd()
-        os.chdir(self.path)
-        yield
-        os.chdir(prev_cwd)
+    def context(self):
+        return Context(self.config)
 
 
 class WorkloadConfigLoader(object):
@@ -97,7 +68,8 @@ class Workflow(object):
     def __init__(self, options):
         self._options = options
         self._checkout_manager = CheckoutManager()
-        self.workspace = None
+        self._module_loader = ModuleLoader('scotty.workload_gen', 'anonymous_workload')
+        self.workload = None
         self._scotty_config = ScottyConfig()
 
     def run(self):
@@ -107,8 +79,10 @@ class Workflow(object):
         self._run()
 
     def _prepare(self):
-        path = os.path.abspath(self._options.workspace)
-        self.workspace = self.workspace or Workspace(path)
+        if not self.workload:
+            self.workload = Workload()
+        if not self.workload.workspace:
+            self.workload.workspace = Workspace(self._options.workspace)
 
     def _checkout(self):
         if self._options.skip_checkout:
@@ -122,7 +96,7 @@ class Workflow(object):
             logger.error(message)
             raise exceptions.WorkloadException(message)
         gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
-        self._checkout_manager.checkout(self.workspace,
+        self._checkout_manager.checkout(self.workload.workspace,
                                         project,
                                         gerrit_url,
                                         zuul_url,
@@ -130,11 +104,13 @@ class Workflow(object):
 
     def _load(self):
         config = WorkloadConfigLoader.load_by_path(self._options.config)
-        self.workload = WorkloadLoader().load_from_workspace(self.workspace, config)
+        module_path = self.workload.module_path
+        self.workload.config = config
+        self.workload.module = self._module_loader.load_by_path(module_path, config['name']) 
 
     def _run(self):
         if not self._options.mock:
-            with self.workspace.cwd():
+            with self.workload.workspace.cwd():
                 try:
                     context = self.workload.context
                     self.workload.module.run(context)

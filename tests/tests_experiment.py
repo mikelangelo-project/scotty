@@ -133,22 +133,3 @@ class WorkflowTest(unittest.TestCase):
         self.workflow._options = options_mock
         with self.assertRaises(ExperimentException):
             self.workflow._checkout()
-
-    @mock.patch('scotty.core.workload.WorkloadLoader.load_from_workspace')
-    @mock.patch('scotty.core.checkout.CheckoutManager.checkout')
-    @mock.patch('os.path.isdir', return_value=False)
-    @mock.patch('os.mkdir')
-    def test_load_workload(self, mkdir_mock, isdir_mock, checkout_mock,
-                           loader_mock):
-        options_mock = mock.MagicMock(skip_checkout=False)
-        self.workflow._options = options_mock
-        workload_config = {
-            'generator': 'test_generator',
-            'name': 'workload_name'
-        }
-        self.workflow._load_workload(
-            path=None, workload_config=workload_config)
-        mkdir_mock.assert_called_once()
-        isdir_mock.assert_called_once()
-        checkout_mock.assert_called_once()
-        loader_mock.assert_called_once()

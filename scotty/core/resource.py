@@ -7,6 +7,7 @@ import sys
 from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
 from scotty.core.moduleloader import ModuleLoader
+from scotty.core.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -20,18 +21,6 @@ class Resource(object):
     @property
     def name(self):
         return self.config['name']
-
-
-class Workspace(object):
-    def __init__(self, path):
-        self.path = path
-
-    @contextlib.contextmanager
-    def cwd(self):
-        prev_cwd = os.getcwd()
-        os.chdir(self.path)
-        yield
-        os.chdir(prev_cwd)
 
 
 class Workflow(object):
