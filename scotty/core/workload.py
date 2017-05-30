@@ -11,27 +11,9 @@ from scotty.core.checkout import CheckoutManager
 from scotty.core import exceptions
 from scotty.core.moduleloader import ModuleLoader 
 from scotty.core.workspace import Workspace
+from scotty.core.components import Workload
 
 logger = logging.getLogger(__name__)
-
-
-class Workload(object):
-    def __init__(self):
-        self.module = None
-        self.config = None
-        self.workspace = None
-
-    @property
-    def name(self):
-        return self.config['name']
-
-    @property
-    def module_path(self):
-        return os.path.join(self.workspace.path, 'workload_gen.py')
-
-    @property
-    def context(self):
-        return Context(self.config)
 
 
 class WorkloadConfigLoader(object):
@@ -45,23 +27,6 @@ class WorkloadConfigLoader(object):
             logger.error("I/O error({0}): {1}".format(e.errno, e.strerror))
             logger.error("Failed to load workload config: {0}".format(path))
             sys.exit(1)
-
-
-class BaseContext(object):
-    def __getattr__(self, name):
-        return self._context[name]
-
-
-class Context(BaseContext):
-    def __init__(self, workload_config):
-        self._context = {}
-        self._context['v1'] = ContextV1(workload_config)
-
-
-class ContextV1(BaseContext):
-    def __init__(self, workload_config):
-        self._context = {}
-        self._context['workload_config'] = workload_config
 
 
 class Workflow(object):

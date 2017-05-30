@@ -8,19 +8,9 @@ from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
 from scotty.core.moduleloader import ModuleLoader
 from scotty.core.workspace import Workspace
+from scotty.core.components import Resource
 
 logger = logging.getLogger(__name__)
-
-
-class Resource(object):
-    def __init__(self):
-        self.config = None
-        self.workspace = None
-        self.module = None
-
-    @property
-    def name(self):
-        return self.config['name']
 
 
 class Workflow(object):

@@ -5,7 +5,7 @@ import contextlib
 
 from scotty.config import ScottyConfig
 from scotty.core.moduleloader import ModuleLoader
-from scotty.core.workload import Workload
+from scotty.core.components import Workload, Experiment
 import scotty.core.exceptions
 from scotty.core.checkout import CheckoutManager
 
@@ -55,20 +55,6 @@ class ExperimentLoader(object):
     def _create_workloads_dir(cls, workspace):
         if not os.path.isdir(workspace.workloads_path):
             os.mkdir(workspace.workloads_path)
-
-
-class Experiment(object):
-    def __init__(self):
-        self._workloads = {}
-        self.config = None
-        self.workspace = None
-
-    def add_workload(self, workload):
-        self._workloads[workload.name] = workload
-
-    @property
-    def workloads(self):
-        return self._workloads
 
 
 class ExperimentConfigLoader(object):

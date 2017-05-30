@@ -5,7 +5,8 @@ import os
 
 import mock
 
-from scotty.core.workload import Context, Workload, WorkloadConfigLoader, Workflow
+from scotty.core.workload import Workload, WorkloadConfigLoader, Workflow
+from scotty.core.context import Context
 from scotty.core.workspace import Workspace
 import scotty.core.exceptions
 from scotty.cli import Cli
