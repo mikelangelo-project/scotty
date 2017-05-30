@@ -24,6 +24,11 @@ Run a Workload
 
     ./scotty.py workload run -w samples/workload
 
+Run an Experiment
+-----------------
+
+    ./scotty.py experiment run -w samples/component/experiment/ -s
+
 
 Run the Tests
 -------------
