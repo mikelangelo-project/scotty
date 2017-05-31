@@ -1,8 +1,7 @@
 import logging
 
-from scotty.cmd.base import CommandParser
-from scotty.cmd.base import CommandRegistry
-from scotty.core import resource
+from scotty.cmd.base import CommandParser, CommandRegistry
+from scotty.workflows import ResourceDeployWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -57,5 +56,5 @@ class Command(object):
 
     def execute(self):
         if self.options.action == 'deploy':
-            workflow = resource.Workflow(self.options)
-            workflow.deploy()
+            workflow = ResourceDeployWorkflow(self.options)
+            workflow.run()

@@ -1,14 +1,16 @@
 import unittest
+import yaml
 import sys
 import imp
 import os
 
 import mock
 
-from scotty.core.workload import Workload, WorkloadConfigLoader, Workflow
+from scotty.workflows import WorkloadRunWorkflow
+from scotty.core.components import Workload
 from scotty.core.context import Context
-from scotty.core.workspace import Workspace
-import scotty.core.exceptions
+from scotty.core.workspace import WorkloadWorkspace
+from scotty.core.exceptions import WorkloadException 
 from scotty.cli import Cli
 
 
@@ -17,12 +19,14 @@ class WorkloadTest(unittest.TestCase):
     workspace_path = 'samples/components/workload/'
 
     def setUp(self):
-        self._workspace = Workspace(self.workspace_path)
+        self._workspace = WorkloadWorkspace(self.workspace_path)
 
     def _get_workload_config(self):
-        workload_config = WorkloadConfigLoader.load_by_path(
-            self.workspace_path + 'workload.yaml')
-        return workload_config
+        workload_config = {}
+        self._workspace.config_path = self.workspace_path + 'workload.yaml'
+        with open(self._workspace.config_path, 'r') as stream:
+            workload_config = yaml.load(stream)
+        return workload_config['workload']
 
 
 class WorkloadWorkspaceTest(WorkloadTest):
@@ -39,16 +43,9 @@ class WorkloadWorkspaceTest(WorkloadTest):
         self.assertEquals(wd, workspace_path)
 
 
-class WorkloadConfigLoaderTest(WorkloadTest):
-    def test_load_by_workspace(self):
-        workload_config = self._get_workload_config()
-        self.assertIsNotNone(workload_config)
-
-
 class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
-        workload_config = WorkloadConfigLoader.load_by_path(
-            self.workspace_path + 'workload.yaml')
+        workload_config = self._get_workload_config()
         self.assertEquals(workload_config['name'], 'sample_workload')
         self.assertEquals(workload_config['generator'], 'sample')
         self.assertTrue(isinstance(workload_config['params'], dict))
@@ -89,7 +86,7 @@ class WorkflowTest(WorkloadTest):
         return unpacked_calls
 
     def _test_run(self, options, environ_dict=None):
-        workflow = Workflow(options)
+        workflow = WorkloadRunWorkflow(options)
         workload = Workload()
         workload.workspace = self._workspace
         workflow.workload = workload
@@ -124,7 +121,7 @@ class WorkflowTest(WorkloadTest):
         cli = Cli()
         cli.parse_command(['workload'])
         cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
-        with self.assertRaises(scotty.core.exceptions.WorkloadException):
+        with self.assertRaises(WorkloadException):
             self._test_run(cli.options, environ_dict={})
 
     @mock.patch('git.cmd')

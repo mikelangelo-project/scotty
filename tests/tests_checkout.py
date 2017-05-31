@@ -1,16 +1,17 @@
 import unittest
+import os
 
 import mock
 
 from scotty.core.checkout import CheckoutManager
-from scotty.core.experiment import Workspace
+from scotty.core.workspace import ExperimentWorkspace
 from scotty.core.exceptions import ScottyException
 
 
 class CheckoutManagerTest(unittest.TestCase):
     @mock.patch('git.cmd')
     def test_checkout(self, git_mock):
-        workspace = Workspace('samples/components/experiment')
+        workspace = ExperimentWorkspace('samples/components/experiment')
         checkout_manager = CheckoutManager()
         checkout_manager.checkout(
             workspace=workspace,
@@ -19,7 +20,7 @@ class CheckoutManagerTest(unittest.TestCase):
             update_url=None,
             ref='ref')
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/components/experiment',), {}),
+        expected_calls = [('Git', (os.path.abspath('samples/components/experiment'),), {}),
                           ('Git().clone', ('origin_urlproject', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),

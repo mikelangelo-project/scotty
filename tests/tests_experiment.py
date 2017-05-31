@@ -3,25 +3,17 @@ import os
 
 import mock
 
-from scotty.core.experiment import Experiment
-from scotty.core.experiment import Workspace
-from scotty.core.experiment import ExperimentLoader
-from scotty.core.experiment import ExperimentConfigLoader
-from scotty.core.experiment import Workflow
-from scotty.core.workload import Workload
+from scotty.core.components import Experiment, Workload
+from scotty.core.workspace import ExperimentWorkspace
+from scotty.workflows import ExperimentPerformWorkflow
 from scotty.core.exceptions import ExperimentException
 
 
 def mock_workspace(workspace_path='samples/components/experiment'):
-    return Workspace(workspace_path)
+    return ExperimentWorkspace(workspace_path)
 
 
 class ExperimentWorkspaceTest(unittest.TestCase):
-    @mock.patch('os.path.isdir', return_value=False)
-    def test_failed_workspace_init(self, isdir_mock):
-        with self.assertRaises(ExperimentException):
-            mock_workspace()
-
     def test_workspace_init(self):
         mock_workspace()
 
@@ -35,14 +27,14 @@ class ExperimentWorkspaceTest(unittest.TestCase):
     def test_workspace_config_path(self, isfile_mock):
         workspace = mock_workspace()
         config_path = workspace.config_path
-        self.assertEquals(config_path,
-                          'samples/components/experiment/experiment.yaml')
+        sample_path = os.path.abspath('samples/components/experiment/experiment.yaml')
+        self.assertEquals(config_path, sample_path)
 
     def test_workloads_path(self):
         workspace = mock_workspace()
         workloads_path = workspace.workloads_path
-        self.assertEquals(workloads_path,
-                          'samples/components/experiment/.workloads/')
+        sample_path = os.path.abspath('samples/components/experiment/.workloads/')
+        self.assertEquals(workloads_path, sample_path)
 
     def test_cwd(self):
         workspace = mock_workspace()
@@ -50,26 +42,6 @@ class ExperimentWorkspaceTest(unittest.TestCase):
             wd = os.getcwd()
         cwd = os.getcwd()
         self.assertEquals(wd, cwd + '/samples/components/experiment')
-
-
-class ExperimentLoaderTest(unittest.TestCase):
-    def setUp(self):
-        self.workspace = mock_workspace()
-        
-    def test_load_from_workspace(self):
-        workspace = self.workspace
-        config = None
-        experiment = ExperimentLoader.load_from_workspace(workspace, config)
-        self.assertEquals(workspace, experiment.workspace)
-        self.assertIsNone(experiment.config)
-
-    @mock.patch('os.path.isdir', return_value=False)
-    @mock.patch('os.mkdir')
-    def test_create_workloads_dir(self, isdir_mock, mkdir_mock):
-        workspace = self.workspace
-        ExperimentLoader._create_workloads_dir(workspace=workspace)
-        isdir_mock.assert_called_once()
-        mkdir_mock.assert_called_once()
 
 
 class ExperimentTest(unittest.TestCase):
@@ -82,23 +54,16 @@ class ExperimentTest(unittest.TestCase):
         self.assertEquals(len(experiment.workloads), 1)
 
 
-class ExperimentConfigLoaderTest(unittest.TestCase):
-    def test_load_by_workspace(self):
-        workspace = mock_workspace()
-        config = ExperimentConfigLoader.load_by_workspace(workspace)
-        self.assertTrue(isinstance(config, dict))
-
-
-class WorkflowTest(unittest.TestCase):
+class ExperimentWorkflowTest(unittest.TestCase):
     def setUp(self):
-        self.workflow = Workflow(options=None)
+        self.workflow = ExperimentPerformWorkflow(options=None)
 
-    @mock.patch('scotty.core.experiment.Workflow._prepare')
-    @mock.patch('scotty.core.experiment.Workflow._checkout')
-    @mock.patch('scotty.core.experiment.Workflow._load')
-    @mock.patch('scotty.core.experiment.Workflow._perform')
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._prepare')
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._checkout')
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._load')
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._run')
     def test_run(self, prepare_mock, checkout_mock, load_mock, run_mock):
-        self.workflow.perform()
+        self.workflow.run()
         prepare_mock.assert_called()
         checkout_mock.assert_called()
         load_mock.assert_called()
@@ -108,7 +73,7 @@ class WorkflowTest(unittest.TestCase):
         options_mock = mock.MagicMock(workspace='.')
         self.workflow._options = options_mock
         self.workflow._prepare()
-        new_workspace = self.workflow.workspace
+        new_workspace = self.workflow.experiment.workspace
         workspace_path = new_workspace.path
         cwd = os.getcwd()
         self.assertEquals(workspace_path, cwd)
@@ -123,6 +88,9 @@ class WorkflowTest(unittest.TestCase):
     def test_checkout(self, checkout_mock, environ_mock):
         options_mock = mock.MagicMock(
             project='test_project', skip_checkout=False)
+        workspace_mock = mock.MagicMock()
+        self.workflow.experiment = mock.MagicMock(
+            workspace = workspace_mock)
         self.workflow._options = options_mock
         self.workflow._checkout()
         checkout_mock.assert_called()
