@@ -55,3 +55,11 @@ class Resource(Component):
     def __init__(self):
         super(Resource, self).__init__()
         self.module = None
+
+    @property
+    def module_path(self):
+        return os.path.join(self.workspace.path, 'resource_gen.py')
+
+    @property
+    def context(self):
+        return Context(self.config)
