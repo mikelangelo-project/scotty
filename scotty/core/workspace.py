@@ -12,3 +12,15 @@ class Workspace(object):
         os.chdir(self.path)
         yield
         os.chdir(prev_cwd)
+
+
+class ExperimentWorkspace(Workspace):
+    pass
+
+
+class WorkloadWorkspace(Workspace):
+    pass
+
+
+class ResourceWorkspace(Workspace):
+    pass
