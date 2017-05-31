@@ -3,7 +3,6 @@ import argparse
 
 from scotty.cmd.base import CommandRegistry
 # The imports are not used, but are required to load the commands on startup.
-import scotty.cmd.legacy
 import scotty.cmd.workload
 import scotty.cmd.experiment
 import scotty.cmd.resource
