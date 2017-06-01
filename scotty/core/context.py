@@ -18,4 +18,3 @@ class ContextV1(BaseContext):
     def __init__(self, workload_config):
         self._context = {}
         self._context['workload_config'] = workload_config
-

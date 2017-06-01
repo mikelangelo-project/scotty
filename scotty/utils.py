@@ -2,6 +2,7 @@ import logging
 
 from scotty.config import ScottyConfig
 
+
 def setup_logging():
     log_dir = ScottyConfig().get('logging', 'log_dir', True)
     log_file = ScottyConfig().get('logging', 'log_file')

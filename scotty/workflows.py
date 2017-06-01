@@ -59,7 +59,7 @@ class ExperimentPerformWorkflow(Workflow):
             logger.error(message)
             raise ExperimentException(message)
         gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
-        self._checkout_manager.checkout(self.experiment.workspace, project, 
+        self._checkout_manager.checkout(self.experiment.workspace, project,
                                         gerrit_url, zuul_url, zuul_ref)
 
     def _load(self):
@@ -83,8 +83,9 @@ class ExperimentPerformWorkflow(Workflow):
     def _create_workload_workspace(self, workload):
         workloads_path = self.experiment.workspace.workloads_path
         if not os.path.isdir(workloads_path):
-            os.mkdir(workspace.workloads_path)
-        workspace_path = os.path.join(workloads_path,
+            os.mkdir(workloads_path)
+        workspace_path = os.path.join(
+            workloads_path,
             workload.config['name'])
         if not os.path.isdir(workspace_path):
             os.mkdir(workspace_path)
@@ -95,7 +96,7 @@ class ExperimentPerformWorkflow(Workflow):
             return
         git_url = self._scotty_config.get('gerrit', 'host') + '/p/'
         project = 'workload_gen/{}'.format(workload.config['generator'])
-        self._checkout_manager.checkout(workload.workspace, project, 
+        self._checkout_manager.checkout(workload.workspace, project,
                                         git_url, None, 'master')
 
     def _run(self):
@@ -175,4 +176,3 @@ class ResourceDeployWorkflow(Workflow):
     def _run(self):
         if not self._options.mock:
             pass
-
