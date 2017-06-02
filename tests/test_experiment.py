@@ -3,7 +3,8 @@ import os
 
 import mock
 
-from scotty.core.components import Experiment, Workload
+from scotty.core.components import Experiment
+from scotty.core.components import Workload
 from scotty.core.workspace import ExperimentWorkspace
 from scotty.workflows import ExperimentPerformWorkflow
 from scotty.core.exceptions import ExperimentException

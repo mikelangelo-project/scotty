@@ -1,6 +1,7 @@
 import logging
 
-from scotty.cmd.base import CommandParser, CommandRegistry
+from scotty.cmd.base import CommandParser
+from scotty.cmd.base import CommandRegistry
 from scotty.workflows import ExperimentPerformWorkflow
 
 logger = logging.getLogger(__name__)
