@@ -6,4 +6,3 @@ GitPython
 mock>=2.0.0
 pytest
 pytest-cov
-flake8
