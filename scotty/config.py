@@ -7,7 +7,8 @@ class ScottyConfig:
 
     def __init__(self):
         self._base_dir = self._find_base_dir()
-        self._path = os.path.normpath(self._base_dir + '/scotty.conf')
+        path = os.path.join(self._base_dir, 'scotty.conf')
+        self._path = os.path.normpath(path)
         self._load()
 
     def _find_base_dir(self):
@@ -18,17 +19,20 @@ class ScottyConfig:
 
     def _get_local_base_dir(self):
         script_dir = os.path.dirname(os.path.realpath(__file__))
-        base_dir = os.path.normpath(script_dir + '/../etc/')
-        config_path = os.path.normpath(base_dir + '/scotty.conf')
+        base_dir = os.path.join(script_dir, '../etc/')
+        base_dir = os.path.normpath(base_dir)
+        config_path = os.path.join(base_dir, 'scotty.conf')
+        config_path = os.path.normpath(config_path)
         return self._verify_base_dir(config_path, base_dir)
 
     def _verify_base_dir(self, config_path, base_dir):
         if os.path.isfile(config_path):
             return base_dir
         else:
-            raise Exception('Found no configuration for scotty' +
-                            '(/etc/scotty/scotty.conf or' +
-                            './python-scotty/etc/scotty.conf)')
+            message = 'Couln\'t find configuration for scotty in '
+            message += '(/etc/scotty/scotty.conf or'
+            message += './python-scotty/etc/scotty.conf)'
+            raise Exception(message)
 
     def _load(self):
         self._config = ConfigParser.ConfigParser()
@@ -36,7 +40,8 @@ class ScottyConfig:
 
     def _abspath(self, path):
         if not os.path.isabs(path):
-            path = os.path.normpath(self._base_dir + '/' + path)
+            path = os.path.join(self._base_dir, path)
+            path = os.path.normpath(path)
         return path
 
     def _is_raw(self, section, option):
