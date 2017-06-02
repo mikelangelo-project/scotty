@@ -42,7 +42,8 @@ class ExperimentWorkspaceTest(unittest.TestCase):
         with workspace.cwd():
             wd = os.getcwd()
         cwd = os.getcwd()
-        self.assertEquals(wd, cwd + '/samples/components/experiment')
+        wd_should = os.path.join(cwd, 'samples/components/experiment')
+        self.assertEquals(wd, wd_should)
 
 
 class ExperimentTest(unittest.TestCase):
