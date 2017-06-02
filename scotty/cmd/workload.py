@@ -2,7 +2,7 @@ import logging
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
-from scotty.core import workload
+from scotty.workflows import WorkloadRunWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -57,5 +57,5 @@ class Command(object):
 
     def execute(self):
         if self.options.action == 'run':
-            workflow = workload.Workflow(self.options)
+            workflow = WorkloadRunWorkflow(self.options)
             workflow.run()

@@ -1,4 +1,8 @@
 # required packages
 
 GitPython
+
+# Test requirements
 mock>=2.0.0
+pytest
+pytest-cov

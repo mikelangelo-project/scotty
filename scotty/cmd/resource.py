@@ -2,7 +2,7 @@ import logging
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
-from scotty.core import resource
+from scotty.workflows import ResourceDeployWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +13,11 @@ class ResourceParser(CommandParser):
         subparsers = parser.add_subparsers(
             help='Action',
             dest='action')
-        createparser = subparsers.add_parser('create')
-        CreateParser().add_arguments(createparser)
+        deployparser = subparsers.add_parser('deploy')
+        DeployParser().add_arguments(deployparser)
 
 
-class CreateParser(CommandParser):
+class DeployParser(CommandParser):
     def add_arguments(self, parser):
         parser.add_argument(
             '-w', '--workspace',
@@ -56,6 +56,6 @@ class Command(object):
         self.options = options
 
     def execute(self):
-        if self.options.action == 'create':
-            workflow = resource.Workflow(self.options)
-            workflow.create()
+        if self.options.action == 'deploy':
+            workflow = ResourceDeployWorkflow(self.options)
+            workflow.run()

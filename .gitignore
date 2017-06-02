@@ -5,3 +5,5 @@
 # Unit test / coverage reports
 .coverage
 .coverage.*
+
+.cache/

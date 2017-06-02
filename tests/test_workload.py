@@ -1,72 +1,40 @@
 import unittest
+import yaml
 import sys
 import imp
 import os
 
 import mock
 
-import scotty.core.workload as workload
-import scotty.core.exceptions
+from scotty.workflows import WorkloadRunWorkflow
+from scotty.core.components import Workload
+from scotty.core.context import Context
+from scotty.core.workspace import WorkloadWorkspace
+from scotty.core.exceptions import WorkloadException 
 from scotty.cli import Cli
 
 
 class WorkloadTest(unittest.TestCase):
-    workload_path = 'samples/component/workload/workload_gen.py'
-    workspace_path = 'samples/component/workload/'
+    workload_path = 'samples/components/workload/workload_gen.py'
+    workspace_path = 'samples/components/workload/'
 
     def setUp(self):
-        self._workspace = workload.Workspace(self.workspace_path)
+        self._workspace = WorkloadWorkspace(self.workspace_path)
 
     def _get_workload_config(self):
-        workload_config = workload.WorkloadConfigLoader.load_by_path(
-            self.workspace_path + 'workload.yaml')
-        return workload_config
-
-
-class WorkloadModuleLoaderTest(WorkloadTest):
-    def make_module(self, name, **args):
-        mod = sys.modules.setdefault(name, imp.new_module(name))
-        mod.__file__ = '<virtual %s>' % name
-        mod.__dict__.update(**args)
-        return mod
-
-    def test_load_workload_no_name(self):
-        workload_ = workload.WorkloadModuleLoader.load_by_path(self.workload_path)
-        self.assertTrue('run' in dir(workload_))
-        module_ = self.make_module('scotty.workload_gen.anonymous_workload')
-        self.assertEqual(workload_, module_)
-
-    def test_load_workload_with_name(self):
-        workload_ = workload.WorkloadModuleLoader.load_by_path(
-            self.workload_path, 'test_workload')
-        self.assertTrue('run' in dir(workload_))
-        module_ = self.make_module('scotty.workload_gen.test_workload')
-        self.assertEqual(workload_, module_)
-
-    def test_load_workspace_no_name(self):
-        workload_ = workload.WorkloadModuleLoader.load_by_workspace(self._workspace)
-        self.assertTrue('run' in dir(workload_))
-        module_ = self.make_module('scotty.workload_gen.anonymous_workload')
-        self.assertEqual(workload_, module_)
-
-    def test_load_workspace_with_name(self):
-        workload_ = workload.WorkloadModuleLoader.load_by_workspace(
-            self._workspace, 'test_workload')
-        self.assertTrue('run' in dir(workload_))
-        module_ = self.make_module('scotty.workload_gen.test_workload')
-        self.assertEqual(workload_, module_)
+        workload_config = {}
+        self._workspace.config_path = self.workspace_path + 'workload.yaml'
+        with open(self._workspace.config_path, 'r') as stream:
+            workload_config = yaml.load(stream)
+        return workload_config['workload']
 
 
 class WorkloadWorkspaceTest(WorkloadTest):
     def test_module_path(self):
-        module_path = self._workspace.module_path
-        self.assertEquals(module_path, 'samples/component/workload/workload_gen.py')
-
-    @mock.patch('os.path.isfile')
-    def test_fail_module_path(self, isfile_mock):
-        isfile_mock.return_value = False
-        with self.assertRaises(scotty.core.exceptions.WorkloadException):
-            self._workspace.module_path
+        workload = Workload()
+        workload.workspace = self._workspace 
+        module_path = workload.module_path
+        self.assertEquals(module_path, os.path.abspath('samples/components/workload/workload_gen.py'))
 
     def test_cwd(self):
         with self._workspace.cwd():
@@ -75,16 +43,9 @@ class WorkloadWorkspaceTest(WorkloadTest):
         self.assertEquals(wd, workspace_path)
 
 
-class WorkloadConfigLoaderTest(WorkloadTest):
-    def test_load_by_workspace(self):
-        workload_config = self._get_workload_config()
-        self.assertIsNotNone(workload_config)
-
-
 class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
-        workload_config = workload.WorkloadConfigLoader.load_by_path(
-            self.workspace_path + 'workload.yaml')
+        workload_config = self._get_workload_config()
         self.assertEquals(workload_config['name'], 'sample_workload')
         self.assertEquals(workload_config['generator'], 'sample')
         self.assertTrue(isinstance(workload_config['params'], dict))
@@ -94,7 +55,7 @@ class WorkloadConfigTest(WorkloadTest):
 class ContextTest(WorkloadTest):
     def test_v1_context(self):
         workload_config = self._get_workload_config()
-        context = workload.Context(workload_config)
+        context = Context(workload_config)
         self.assertEquals(workload_config, context.v1.workload_config)
 
 
@@ -103,10 +64,10 @@ class WorkflowTest(WorkloadTest):
     def test_run_without_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
                           ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),
@@ -125,8 +86,10 @@ class WorkflowTest(WorkloadTest):
         return unpacked_calls
 
     def _test_run(self, options, environ_dict=None):
-        workflow = workload.Workflow(options)
-        workflow.workspace = self._workspace
+        workflow = WorkloadRunWorkflow(options)
+        workload = Workload()
+        workload.workspace = self._workspace
+        workflow.workload = workload
         if environ_dict is None:
             environ_dict = {
                 'ZUUL_PROJECT': 'zuul_project',
@@ -140,10 +103,10 @@ class WorkflowTest(WorkloadTest):
     def test_run_with_project(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload', '-p', 'project'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
                           ('Git().clone', ('https://gerrit/p/project', '.'), {}),
                           ('Git().remote', ('update',), {}),
                           ('Git().reset', ('--hard',), {}),
@@ -157,18 +120,18 @@ class WorkflowTest(WorkloadTest):
     def test_without_zuul_settings(self):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload', '-p', 'project'])
-        with self.assertRaises(scotty.core.exceptions.WorkloadException):
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
+        with self.assertRaises(WorkloadException):
             self._test_run(cli.options, environ_dict={})
 
     @mock.patch('git.cmd')
     def test_with_workload_exception(self, git_mock):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/component/workload/workload.yaml', '-w', 'samples/component/workload'])
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
         self._test_run(cli.options)
         unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', ('samples/component/workload/',), {}),
+        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
                           ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
                           ('Git().remote', ('update',), {}), ('Git().reset', ('--hard',), {}),
                           ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
