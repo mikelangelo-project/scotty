@@ -1,6 +1,7 @@
 import logging
 import os
 import yaml
+from distutils.dir_util import copy_tree
 
 from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
@@ -25,16 +26,12 @@ class Workflow(object):
 
     def run(self):
         self._prepare()
-        self._checkout()
         self._load()
         self._run()
         self._clean()
 
     def _prepare(self):
         raise NotImplementedError('Workload._prepare(self) must be implemented')
-
-    def _checkout(self):
-        raise NotImplementedError('Workload._checkout(self) must be implemented')
 
     def _load(self):
         raise NotImplementedError('Workload._load(self) must be implemented')
@@ -52,21 +49,6 @@ class ExperimentPerformWorkflow(Workflow):
         self.experiment = Experiment()
         self.experiment.workspace = ExperimentWorkspace(self._options.workspace)
 
-    def _checkout(self):
-        if self._options.skip_checkout:
-            return
-        try:
-            project = self._options.project or os.environ['ZUUL_PROJECT']
-            zuul_url = os.environ['ZUUL_URL']
-            zuul_ref = os.environ['ZUUL_REF']
-        except KeyError as e:
-            message = 'Missing Zuul settings ({})'.format(e)
-            logger.error(message)
-            raise ExperimentException(message)
-        gerrit_url = self._scotty_config.get('gerrit', 'host') + '/p/'
-        self._checkout_manager.checkout(self.experiment.workspace, project,
-                                        gerrit_url, zuul_url, zuul_ref)
-
     def _load(self):
         config = self._load_config()
         self.experiment.config = config
@@ -74,15 +56,25 @@ class ExperimentPerformWorkflow(Workflow):
             workload = Workload()
             workload.config = workload_config
             workload.workspace = self._create_workload_workspace(workload)
-            self._checkout_workload(workload)
+            if workload.source_is('git'):
+                self._checkout_workload(workload)
+            elif workload.source_is('file'):
+                self._copy_workload(workload)
+            else:
+                logger.error('Unsupported source type. Use "git:" or "file:')
+                exit(1)
             workload.module = self._module_loader.load_by_path(
                 workload.module_path, workload.name)
             self.experiment.add_workload(workload)
 
     def _load_config(self):
         config = {}
-        with open(self.experiment.workspace.config_path, 'r') as stream:
-            config = yaml.load(stream)
+        try:
+            with open(self.experiment.workspace.config_path, 'r') as stream:
+                config = yaml.load(stream)
+        except ExperimentException as e:
+            logger.error(e.message)
+            exit(1)
         return config
 
     def _create_workload_workspace(self, workload):
@@ -97,12 +89,26 @@ class ExperimentPerformWorkflow(Workflow):
         return WorkloadWorkspace(workspace_path)
 
     def _checkout_workload(self, workload):
-        if self._options.skip_checkout:
-            return
-        git_url = self._scotty_config.get('gerrit', 'host') + '/p/'
-        project = 'workload_gen/{}'.format(workload.config['generator'])
-        self._checkout_manager.checkout(workload.workspace, project,
-                                        git_url, None, 'master')
+        source = workload.config['generator'].split(':')
+        git_url = "{}:{}".format(source[1], source[2])
+        git_ref = None
+        if len(source) > 3:
+            git_ref = source[3]
+        logger.info('Clone workload generator ({}) into experiment workload workspace ({})'.format(
+            git_url,
+            workload.workspace.path))
+        self._checkout_manager.checkout(git_url, workload.workspace, git_ref)
+
+    def _copy_workload(self, workload):
+        source = workload.config['generator'].split(':')
+        logger.info('Copy workload generator ({}) into experiment workload workspace ({})'.format(
+            source[1], 
+            workload.workspace.path))
+        if os.path.isabs(source[1]):
+            logger.error('Source ({}) for workload generator ({}) must be relative'.format(source[1], workload.name))
+            exit(1)
+        source_path = os.path.join(self.experiment.workspace.path, source[1], '.')
+        copy_tree(source_path, workload.workspace.path)
 
     def _run(self):
         if not self._options.mock:
@@ -128,21 +134,6 @@ class WorkloadRunWorkflow(Workflow):
             self.workload.workspace = WorkloadWorkspace(self._options.workspace)
         if not self.workload.workspace.config_path:
             self.workload.workspace.config_path = self._options.config
-
-    def _checkout(self):
-        if self._options.skip_checkout:
-            return
-        try:
-            project = self._options.project or os.environ['ZUUL_PROJECT']
-            zuul_url = os.environ['ZUUL_URL']
-            zuul_ref = os.environ['ZUUL_REF']
-        except KeyError as e:
-            message = 'Missing zuul setting ({})'.format(e)
-            logger.error(message)
-            raise WorkloadException(message)
-        git_url = self._scotty_config.get('gerrit', 'host') + '/p/'
-        self._checkout_manager.checkout(self.workload.workspace, project,
-                                        git_url, zuul_url, zuul_ref)
 
     def _load(self):
         self.workload.config = self._load_config()
@@ -170,10 +161,6 @@ class ResourceDeployWorkflow(Workflow):
         self._module_loader = ModuleLoader('scotty.component.resource__gen', 'anonymous_resource')
         self.resource = Resource()
         self.resource.workspace = ResourceWorkspace(self._options.workspace)
-
-    def _checkout(self):
-        if self._options.skip_checkout:
-            return
 
     def _load(self):
         pass

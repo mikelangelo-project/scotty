@@ -9,39 +9,32 @@ logger = logging.getLogger(__name__)
 
 
 class CheckoutManager(object):
-    def checkout(self, workspace, project, origin_url, update_url, ref):
-        url = '{url}{project}'.format(url=origin_url, project=project)
-        repo = self._create_repo(workspace, url)
-        self._clean_repo(repo, True)
-        if update_url is not None:
-            url = '{url}{project}'.format(url=update_url, project=project)
-        self._update_repo(repo, url, ref)
-        self._clean_repo(repo)
+    def __init__(self):
+        self._reduce_logging()
+
+    def _reduce_logging(self):
+        logging.getLogger('git.cmd').setLevel(logging.WARNING)
+        logging.getLogger('git.repo.base').setLevel(logging.WARNING)
+
+    def checkout(self, git_url, workspace, git_ref=None):
+        if not self.is_git_dir(workspace.path):
+            repo = git.Repo.clone_from(git_url, workspace.path)
+        else:
+            repo = git.Repo(workspace.path)
+        repo.git.remote('update')
+        repo.git.reset('--hard')
+        repo.git.clean('-x', '-f', '-d', '-q')
+        if git_ref:
+            repo.git.fetch(git_url, git_ref)
+            repo.git.checkout('FETCH_HEAD')
+            repo.git.reset('--hard', 'FETCH_HEAD')
         self._init_submodules(workspace, repo)
 
-    def _create_repo(self, workspace, url):
-        repo = git.cmd.Git(workspace.path)
-        if not os.path.isdir('{path}/.git'.format(path=workspace.path)):
-            repo.clone(url, '.')
-        return repo
-
-    def _clean_repo(self, repo, reset=False):
-        if reset:
-            repo.remote('update')
-            repo.reset('--hard')
-        repo.clean('-x', '-f', '-d', '-q')
-
-    def _update_repo(self, repo, url, ref):
-        if ref.startswith('refs/tags'):
-            raise ScottyException(
-                'Checkout of refs/tags not supported')
-        else:
-            repo.fetch(url, ref)
-            repo.checkout('FETCH_HEAD')
-            repo.reset('--hard', 'FETCH_HEAD')
+    def is_git_dir(self, path):
+        return os.path.isdir('{path}/.git'.format(path=path))
 
     def _init_submodules(self, workspace, repo):
         if os.path.isfile('{path}/.gitmodules'.format(path=workspace.path)):
-            repo.submodules('init')
-            repo.submodules('sync')
-            repo.submodules('update', '--init')
+            repo.git.submodules('init')
+            repo.git.submodules('sync')
+            repo.git.submodules('update', '--init')

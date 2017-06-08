@@ -61,13 +61,11 @@ class ExperimentWorkflowTest(unittest.TestCase):
         self.workflow = ExperimentPerformWorkflow(options=None)
 
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._prepare')
-    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._checkout')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._load')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._run')
-    def test_run(self, prepare_mock, checkout_mock, load_mock, run_mock):
+    def test_run(self, prepare_mock, load_mock, run_mock):
         self.workflow.run()
         prepare_mock.assert_called()
-        checkout_mock.assert_called()
         load_mock.assert_called()
         run_mock.assert_called()
 
@@ -79,27 +77,3 @@ class ExperimentWorkflowTest(unittest.TestCase):
         workspace_path = new_workspace.path
         cwd = os.getcwd()
         self.assertEquals(workspace_path, cwd)
-
-    def test_skip_checkout(self):
-        options_mock = mock.MagicMock(skip_checkout=True)
-        self.workflow._options = options_mock
-        self.workflow._checkout()
-
-    @mock.patch('os.environ', return_value='zuul_env')
-    @mock.patch('scotty.core.checkout.CheckoutManager.checkout')
-    def test_checkout(self, checkout_mock, environ_mock):
-        options_mock = mock.MagicMock(
-            project='test_project', skip_checkout=False)
-        workspace_mock = mock.MagicMock()
-        self.workflow.experiment = mock.MagicMock(
-            workspace = workspace_mock)
-        self.workflow._options = options_mock
-        self.workflow._checkout()
-        checkout_mock.assert_called()
-
-    def test_checkout_no_environ(self):
-        options_mock = mock.MagicMock(
-            project='test_project', skip_checkout=False)
-        self.workflow._options = options_mock
-        with self.assertRaises(ExperimentException):
-            self.workflow._checkout()

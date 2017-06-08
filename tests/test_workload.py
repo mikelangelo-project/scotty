@@ -60,83 +60,12 @@ class ContextTest(WorkloadTest):
 
 
 class WorkflowTest(WorkloadTest):
-    @mock.patch('git.cmd')
-    def test_run_without_project(self, git_mock):
+    def test_run(self):
         cli = Cli()
         cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
-        self._test_run(cli.options)
-        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
-                          ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
-                          ('Git().remote', ('update',), {}),
-                          ('Git().reset', ('--hard',), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
-                          ('Git().fetch', ('zuul_urlzuul_project', 'zuul_ref'), {}),
-                          ('Git().checkout', ('FETCH_HEAD',), {}),
-                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
-        self.assertEquals(unpacked_calls, expected_calls)
-
-    def _unpack_calls(self, mock_calls):
-        unpacked_calls = []
-        for mock_call in mock_calls:
-            name, args, kwargs = mock_call
-            unpacked_calls.append((name, args, kwargs))
-        return unpacked_calls
-
-    def _test_run(self, options, environ_dict=None):
-        workflow = WorkloadRunWorkflow(options)
+        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w' 'samples/components/workload'])
+        workflow = WorkloadRunWorkflow(cli.options)
         workload = Workload()
         workload.workspace = self._workspace
         workflow.workload = workload
-        if environ_dict is None:
-            environ_dict = {
-                'ZUUL_PROJECT': 'zuul_project',
-                'ZUUL_URL': 'zuul_url',
-                'ZUUL_REF': 'zuul_ref'
-            }
-        with mock.patch.dict(os.environ, environ_dict):
-            workflow.run()
-
-    @mock.patch('git.cmd')
-    def test_run_with_project(self, git_mock):
-        cli = Cli()
-        cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
-        self._test_run(cli.options)
-        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
-                          ('Git().clone', ('https://gerrit/p/project', '.'), {}),
-                          ('Git().remote', ('update',), {}),
-                          ('Git().reset', ('--hard',), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
-                          ('Git().fetch', ('zuul_urlproject', 'zuul_ref'), {}),
-                          ('Git().checkout', ('FETCH_HEAD',), {}),
-                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
-        self.assertEquals(unpacked_calls, expected_calls)
-
-    def test_without_zuul_settings(self):
-        cli = Cli()
-        cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload', '-p', 'project'])
-        with self.assertRaises(WorkloadException):
-            self._test_run(cli.options, environ_dict={})
-
-    @mock.patch('git.cmd')
-    def test_with_workload_exception(self, git_mock):
-        cli = Cli()
-        cli.parse_command(['workload'])
-        cli.parse_command_options(['run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload'])
-        self._test_run(cli.options)
-        unpacked_calls = self._unpack_calls(git_mock.mock_calls)
-        expected_calls = [('Git', (os.path.abspath('samples/components/workload/'),), {}),
-                          ('Git().clone', ('https://gerrit/p/zuul_project', '.'), {}),
-                          ('Git().remote', ('update',), {}), ('Git().reset', ('--hard',), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {}),
-                          ('Git().fetch', ('zuul_urlzuul_project', 'zuul_ref'), {}),
-                          ('Git().checkout', ('FETCH_HEAD',), {}),
-                          ('Git().reset', ('--hard', 'FETCH_HEAD'), {}),
-                          ('Git().clean', ('-x', '-f', '-d', '-q'), {})]
-        self.assertEquals(unpacked_calls, expected_calls)
+        workflow.run() 
