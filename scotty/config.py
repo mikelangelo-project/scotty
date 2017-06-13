@@ -5,7 +5,7 @@ import ConfigParser
 from scotty.exceptions import ScottyException
 
 
-class ScottyConfig(objects):
+class ScottyConfig(object):
     _raw_config = {'logging': {'log_format': True}}
 
     def __init__(self):
