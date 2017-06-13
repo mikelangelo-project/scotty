@@ -1,8 +1,11 @@
 import os
+
 import ConfigParser
 
+from scotty.exceptions import ScottyException
 
-class ScottyConfig:
+
+class ScottyConfig(objects):
     _raw_config = {'logging': {'log_format': True}}
 
     def __init__(self):
@@ -29,10 +32,10 @@ class ScottyConfig:
         if os.path.isfile(config_path):
             return base_dir
         else:
-            message = 'Couln\'t find configuration for scotty in '
+            message = 'Couldn\'t find configuration for scotty in '
             message += '(/etc/scotty/scotty.conf or'
             message += './python-scotty/etc/scotty.conf)'
-            raise Exception(message)
+            raise ScottyException(message)
 
     def _load(self):
         self._config = ConfigParser.ConfigParser()

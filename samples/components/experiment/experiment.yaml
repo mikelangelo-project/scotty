@@ -1,6 +1,6 @@
 description: |
-  "This is a example for a experiment definition in scotty
-  The section are
+  "This is a example for an experiment definition in scotty
+  The sections are
     - description
     - tags
     - environment

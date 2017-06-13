@@ -1,6 +1,7 @@
 import logging
 import os
 import yaml
+
 from distutils.dir_util import copy_tree
 
 from scotty.config import ScottyConfig
@@ -14,6 +15,7 @@ from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.exceptions import ExperimentException
 from scotty.core.exceptions import WorkloadException
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +33,13 @@ class Workflow(object):
         self._clean()
 
     def _prepare(self):
-        raise NotImplementedError('Workload._prepare(self) must be implemented')
+        raise NotImplementedError('Workflow._prepare(self) must be implemented')
 
     def _load(self):
-        raise NotImplementedError('Workload._load(self) must be implemented')
+        raise NotImplementedError('Workflow._load(self) must be implemented')
 
     def _run(self):
-        raise NotImplementedError('Workload._run(self) must be implemented')
+        raise NotImplementedError('Workflow._run(self) must be implemented')
 
     def _clean(self):
         pass
@@ -56,25 +58,23 @@ class ExperimentPerformWorkflow(Workflow):
             workload = Workload()
             workload.config = workload_config
             workload.workspace = self._create_workload_workspace(workload)
-            if workload.source_is('git'):
-                self._checkout_workload(workload)
-            elif workload.source_is('file'):
-                self._copy_workload(workload)
-            else:
-                logger.error('Unsupported source type. Use "git:" or "file:')
-                exit(1)
+            self._populate_workload_dir(workload)
             workload.module = self._module_loader.load_by_path(
                 workload.module_path, workload.name)
             self.experiment.add_workload(workload)
+            
+    def _populate_workload_dir(self, workload):
+        if workload.source_is('git'):
+            self._checkout_workload(workload)
+        elif workload.source_is('file'):
+            self._copy_workload(workload)
+        else:
+            raise ExperimentException('Unsupported source type. Use "git:" or "file:')
 
     def _load_config(self):
         config = {}
-        try:
-            with open(self.experiment.workspace.config_path, 'r') as stream:
-                config = yaml.load(stream)
-        except ExperimentException as e:
-            logger.error(e.message)
-            exit(1)
+        with open(self.experiment.workspace.config_path, 'r') as stream:
+            config = yaml.load(stream)
         return config
 
     def _create_workload_workspace(self, workload):
