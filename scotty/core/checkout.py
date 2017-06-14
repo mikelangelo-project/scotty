@@ -3,8 +3,6 @@ import os
 
 import git
 
-from scotty.core.exceptions import ScottyException
-
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +22,7 @@ class CheckoutManager(object):
         repo.git.remote('update')
         repo.git.reset('--hard')
         repo.git.clean('-x', '-f', '-d', '-q')
-        if git_ref:
+        if git_ref is not None:
             repo.git.fetch(git_url, git_ref)
             repo.git.checkout('FETCH_HEAD')
             repo.git.reset('--hard', 'FETCH_HEAD')

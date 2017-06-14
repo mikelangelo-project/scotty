@@ -7,13 +7,12 @@ from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
 from scotty.core.moduleloader import ModuleLoader
 from scotty.core.workspace import ResourceWorkspace
-from scotty.core.workspace import WorkloadWorkspace 
+from scotty.core.workspace import WorkloadWorkspace
 from scotty.core.workspace import ExperimentWorkspace
 from scotty.core.components import Experiment
 from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.exceptions import ExperimentException
-from scotty.core.exceptions import WorkloadException
 
 logger = logging.getLogger(__name__)
 
@@ -102,10 +101,12 @@ class ExperimentPerformWorkflow(Workflow):
     def _copy_workload(self, workload):
         source = workload.config['generator'].split(':')
         logger.info('Copy workload generator ({}) into experiment workload workspace ({})'.format(
-            source[1], 
+            source[1],
             workload.workspace.path))
         if os.path.isabs(source[1]):
-            logger.error('Source ({}) for workload generator ({}) must be relative'.format(source[1], workload.name))
+            logger.error('Source ({}) for workload generator ({}) must be relative'.format(
+                source[1], 
+                workload.name))
             exit(1)
         source_path = os.path.join(self.experiment.workspace.path, source[1], '.')
         copy_tree(source_path, workload.workspace.path)
