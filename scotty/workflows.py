@@ -1,7 +1,8 @@
 import logging
 import os
 import yaml
-from distutils.dir_util import copy_tree
+
+import distutils.dir_util as dir_util
 
 from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
@@ -13,6 +14,7 @@ from scotty.core.components import Experiment
 from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.exceptions import ExperimentException
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +32,13 @@ class Workflow(object):
         self._clean()
 
     def _prepare(self):
-        raise NotImplementedError('Workload._prepare(self) must be implemented')
+        raise NotImplementedError('Workflow._prepare(self) must be implemented')
 
     def _load(self):
-        raise NotImplementedError('Workload._load(self) must be implemented')
+        raise NotImplementedError('Workflow._load(self) must be implemented')
 
     def _run(self):
-        raise NotImplementedError('Workload._run(self) must be implemented')
+        raise NotImplementedError('Workflow._run(self) must be implemented')
 
     def _clean(self):
         pass
@@ -55,38 +57,25 @@ class ExperimentPerformWorkflow(Workflow):
             workload = Workload()
             workload.config = workload_config
             workload.workspace = self._create_workload_workspace(workload)
-            if workload.source_is('git'):
-                self._checkout_workload(workload)
-            elif workload.source_is('file'):
-                self._copy_workload(workload)
-            else:
-                logger.error('Unsupported source type. Use "git:" or "file:')
-                exit(1)
+            self._populate_workload_dir(workload)
             workload.module = self._module_loader.load_by_path(
                 workload.module_path, workload.name)
             self.experiment.add_workload(workload)
-
+           
     def _load_config(self):
         config = {}
-        try:
-            with open(self.experiment.workspace.config_path, 'r') as stream:
-                config = yaml.load(stream)
-        except ExperimentException as e:
-            logger.error(e.message)
-            exit(1)
+        with open(self.experiment.workspace.config_path, 'r') as stream:
+            config = yaml.load(stream)
         return config
-
-    def _create_workload_workspace(self, workload):
-        workloads_path = self.experiment.workspace.workloads_path
-        if not os.path.isdir(workloads_path):
-            os.mkdir(workloads_path)
-        workspace_path = os.path.join(
-            workloads_path,
-            workload.config['name'])
-        if not os.path.isdir(workspace_path):
-            os.mkdir(workspace_path)
-        return WorkloadWorkspace(workspace_path)
-
+            
+    def _populate_workload_dir(self, workload):
+        if workload.source_is('git'):
+            self._checkout_workload(workload)
+        elif workload.source_is('file'):
+            self._copy_workload(workload)
+        else:
+            raise ExperimentException('Unsupported source type. Use "git:" or "file:')
+            
     def _checkout_workload(self, workload):
         source = workload.config['generator'].split(':')
         git_url = "{}:{}".format(source[1], source[2])
@@ -104,17 +93,29 @@ class ExperimentPerformWorkflow(Workflow):
             source[1],
             workload.workspace.path))
         if os.path.isabs(source[1]):
-            logger.error('Source ({}) for workload generator ({}) must be relative'.format(
+            error_message = 'Source ({}) for workload generator ({}) must be relative'.format(
                 source[1], 
-                workload.name))
-            exit(1)
+                workload.name)
+            logger.error(error_message)
+            raise ExperimentException(error_message)
         source_path = os.path.join(self.experiment.workspace.path, source[1], '.')
-        copy_tree(source_path, workload.workspace.path)
+        dir_util.copy_tree(source_path, workload.workspace.path)
+
+    def _create_workload_workspace(self, workload):
+        workloads_path = self.experiment.workspace.workloads_path
+        if not os.path.isdir(workloads_path):
+            os.mkdir(workloads_path)
+        workspace_path = os.path.join(
+            workloads_path,
+            workload.config['name'])
+        if not os.path.isdir(workspace_path):
+            os.mkdir(workspace_path)
+        return WorkloadWorkspace(workspace_path)
 
     def _run(self):
         if not self._options.mock:
-            for workload_name, workload in self.experiment.workloads.iteritems(
-            ):
+            # TODO run the workload generators asynchronously
+            for workload in self.experiment.workloads.itervalues():
                 with self.experiment.workspace.cwd():
                     context = workload.context
                     try:
