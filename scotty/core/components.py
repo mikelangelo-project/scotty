@@ -27,7 +27,9 @@ class Workload(Component):
 
     def source_is(self, _type):
         source = self.config['generator'].split(':')
-        return source[0].upper() == _type.upper()
+        source_type = source[0].upper()
+        same_type = source_type == _type.upper()
+        return same_type
 
     @property
     def context(self):

@@ -8,6 +8,7 @@ from scotty.core.exceptions import ScottyException
 logger = logging.getLogger(__name__)
 
 
+# TODO use classmethods, since there is no state in the instance
 class CheckoutManager(object):
     def __init__(self):
         self._reduce_logging()
