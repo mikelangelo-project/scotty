@@ -7,3 +7,6 @@
 .coverage.*
 
 .cache/
+
+# samples
+samples/components/experiment/.workloads/

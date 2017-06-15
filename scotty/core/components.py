@@ -25,6 +25,12 @@ class Workload(Component):
     def module_path(self):
         return os.path.join(self.workspace.path, 'workload_gen.py')
 
+    def source_is(self, _type):
+        source = self.config['generator'].split(':')
+        source_type = source[0].upper()
+        same_type = source_type == _type.upper()
+        return same_type
+
     @property
     def context(self):
         return Context(self.config)

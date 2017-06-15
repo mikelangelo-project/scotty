@@ -22,7 +22,7 @@ class CliTest(object):
 
 
 class CliWorkloadTest(CliTest, unittest.TestCase):
-    args = ['./scotty.py', 'workload', 'run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload/', '-s']
+    args = ['./scotty.py', 'workload', 'run', '-c', 'samples/components/workload/workload.yaml', '-w', 'samples/components/workload/']
 
     def test_parse_workload_command(self):
         cli_ = cli.Cli()
@@ -35,14 +35,12 @@ class CliWorkloadTest(CliTest, unittest.TestCase):
         cli_.parse_command_options(self.args[2:])
         self.assertEquals(cli_.options.action, 'run')
         self.assertFalse(cli_.options.mock)
-        self.assertIsNone(cli_.options.project)
         self.assertEquals(cli_.options.workspace, 'samples/components/workload/')
-        self.assertTrue(cli_.options.skip_checkout)
 
 
 class CliExperimentTest(CliTest, unittest.TestCase):
     args = [
-        './scotty.py', 'experiment', 'perform', '-w', 'samples/components/experiment', '-s'
+        './scotty.py', 'experiment', 'perform', '-w', 'samples/components/experiment'
     ]
 
     def test_parse_experiment_command(self):
@@ -57,6 +55,4 @@ class CliExperimentTest(CliTest, unittest.TestCase):
         print cli_.options
         self.assertEquals(cli_.options.action, 'perform')
         self.assertFalse(cli_.options.mock)
-        self.assertIsNone(cli_.options.project)
-        self.assertTrue(cli_.options.skip_checkout)
         self.assertEqual(cli_.options.workspace, 'samples/components/experiment')

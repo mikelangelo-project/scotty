@@ -24,24 +24,13 @@ class PerformParser(CommandParser):
             help='Path to experiment workspace',
             dest='workspace',
             action='store',
-            required=True)
+            default='./')
         parser.add_argument(
             '-m', '--mock',
             help='Do not run the workloads',
             dest='mock',
             default=False,
             action='store_true')
-        parser.add_argument(
-            '-s', '--skip-checkout',
-            help='Do not checkout experiment and workloads',
-            dest='skip_checkout',
-            default=False,
-            action='store_true')
-        parser.add_argument(
-            '-p', '--project',
-            help='Experiment project to perform',
-            dest='project',
-            action='store')
 
 
 @CommandRegistry.command

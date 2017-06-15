@@ -24,7 +24,7 @@ class RunParser(CommandParser):
             help='Path to workload workspace',
             dest='workspace',
             action='store',
-            required=True)
+            default='./')
         parser.add_argument(
             '-c', '--config',
             help='Path to workload config',
@@ -37,17 +37,6 @@ class RunParser(CommandParser):
             dest='mock',
             default=False,
             action='store_true')
-        parser.add_argument(
-            '-s', '--skip-checkout',
-            help='Do not checkout workload',
-            dest='skip_checkout',
-            default=False,
-            action='store_true')
-        parser.add_argument(
-            '-p', '--project',
-            help='Workload project to run',
-            dest='project',
-            action='store')
 
 
 @CommandRegistry.command
