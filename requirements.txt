@@ -1,5 +1,6 @@
 # required packages
 
+pyyaml
 GitPython
 
 # Test requirements
