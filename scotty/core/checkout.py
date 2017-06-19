@@ -8,13 +8,6 @@ logger = logging.getLogger(__name__)
 
 # TODO use classmethods, since there is no state in the instance
 class CheckoutManager(object):
-    def __init__(self):
-        self._reduce_logging()
-
-    def _reduce_logging(self):
-        logging.getLogger('git.cmd').setLevel(logging.WARNING)
-        logging.getLogger('git.repo.base').setLevel(logging.WARNING)
-
     def checkout(self, git_url, workspace, git_ref=None):
         repo = self._get_repo(git_url, workspace)
         self._sync_repo(repo)

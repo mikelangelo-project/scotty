@@ -16,3 +16,10 @@ def setup_logging():
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(stream_handler)
+
+    _reduce_logging()
+
+def _reduce_logging():
+    logging.getLogger('git.cmd').setLevel(logging.WARNING)
+    logging.getLogger('git.repo.base').setLevel(logging.WARNING)
+    logging.getLogger('git.remote').setLevel(logging.WARNING)
