@@ -54,9 +54,11 @@ class WorkloadConfigTest(WorkloadTest):
 
 class ContextTest(WorkloadTest):
     def test_v1_context(self):
+        workload = Workload()
         workload_config = self._get_workload_config()
-        context = Context(workload_config)
-        self.assertEquals(workload_config, context.v1.workload_config)
+        workload.config = workload_config
+        context = Context(workload)
+        self.assertEquals(workload_config, context.v1.self.config)
 
 
 class WorkflowTest(WorkloadTest):
