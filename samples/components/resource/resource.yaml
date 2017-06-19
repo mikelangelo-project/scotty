@@ -1,6 +1,6 @@
 resource:
-  - name: mongo_new
-    generator: mongo_cluster
-    params: 
-      mongos: 1
-      shards: 3
+  name: demo
+  generator: file:.
+  params:
+    a: 1
+    b: 3

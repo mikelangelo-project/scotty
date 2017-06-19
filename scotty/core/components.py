@@ -1,8 +1,6 @@
 import logging
 import os
 
-from scotty.core.context import Context
-
 logger = logging.getLogger(__name__)
 
 
@@ -30,10 +28,6 @@ class Workload(Component):
         source_type = source[0].upper()
         same_type = source_type == _type.upper()
         return same_type
-
-    @property
-    def context(self):
-        return Context(self.config)
 
 
 class Experiment(Component):
@@ -65,7 +59,3 @@ class Resource(Component):
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'resource_gen.py')
-
-    @property
-    def context(self):
-        return Context(self.config)

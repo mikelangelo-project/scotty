@@ -13,6 +13,7 @@ from scotty.core.workspace import ExperimentWorkspace
 from scotty.core.components import Experiment
 from scotty.core.components import Workload
 from scotty.core.components import Resource
+from scotty.core.context import Context
 from scotty.core.exceptions import ExperimentException
 
 
@@ -114,10 +115,9 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run(self):
         if not self._options.mock:
-            # TODO run the workload generators asynchronously
             for workload in self.experiment.workloads.itervalues():
                 with self.experiment.workspace.cwd():
-                    context = workload.context
+                    context = Context(workload, self.experiment)
                     try:
                         workload.module.run(context)
                     except:
@@ -151,7 +151,7 @@ class WorkloadRunWorkflow(Workflow):
     def _run(self):
         if not self._options.mock:
             with self.workload.workspace.cwd():
-                context = self.workload.context
+                context = Context(self.workload)
                 try:
                     self.workload.module.run(context)
                 except:
@@ -159,14 +159,29 @@ class WorkloadRunWorkflow(Workflow):
 
 
 class ResourceDeployWorkflow(Workflow):
+    resource = None
+
     def _prepare(self):
         self._module_loader = ModuleLoader('scotty.component.resource__gen', 'anonymous_resource')
         self.resource = Resource()
         self.resource.workspace = ResourceWorkspace(self._options.workspace)
+        self.resource.workspace.config_path = self._options.config
 
     def _load(self):
-        pass
+        self.resource.config = self._load_config()
+        self.resource.module = self._module_loader.load_by_path(
+            self.resource.module_path, self.resource.name)
+
+    def _load_config(self):
+        config = {}
+        with open(self.resource.workspace.config_path, 'r') as stream:
+            config = yaml.load(stream)
+        return config['resource']
 
     def _run(self):
         if not self._options.mock:
-            pass
+            context = Context(self.resource)
+            try:
+                resource.endpoint = self.resource.module.deploy(context)
+            except:
+                logger.exception('Error from customer resource generator')

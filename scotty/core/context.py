@@ -9,12 +9,17 @@ class BaseContext(object):
 
 
 class Context(BaseContext):
-    def __init__(self, workload_config):
+    def __init__(self, self_component, experiment=None):
         self._context = {}
-        self._context['v1'] = ContextV1(workload_config)
+        self._context['v1'] = ContextV1(self_component, experiment)
 
 
 class ContextV1(BaseContext):
-    def __init__(self, workload_config):
+    def __init__(self, self_component, experiment=None):
         self._context = {}
-        self._context['workload_config'] = workload_config
+        self._context['self'] = self_component
+        self._context['experiment'] = experiment
+        self._init_utils()
+
+    def _init_utils(self):
+        self._context['utils'] = None #osmod heat etc
