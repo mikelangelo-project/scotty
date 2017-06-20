@@ -9,4 +9,4 @@
 .cache/
 
 # samples
-samples/components/experiment/.workloads/
+samples/components/experiment/.scotty/

@@ -31,12 +31,6 @@ class ExperimentWorkspaceTest(unittest.TestCase):
         sample_path = os.path.abspath('samples/components/experiment/experiment.yaml')
         self.assertEquals(config_path, sample_path)
 
-    def test_workloads_path(self):
-        workspace = mock_workspace()
-        workloads_path = workspace.workloads_path
-        sample_path = os.path.abspath('samples/components/experiment/.workloads/')
-        self.assertEquals(workloads_path, sample_path)
-
     def test_cwd(self):
         workspace = mock_workspace()
         with workspace.cwd():

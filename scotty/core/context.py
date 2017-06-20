@@ -22,4 +22,4 @@ class ContextV1(BaseContext):
         self._init_utils()
 
     def _init_utils(self):
-        self._context['utils'] = None #osmod heat etc
+        self._context['utils'] = None  # osmod heat etc

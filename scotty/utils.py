@@ -19,6 +19,7 @@ def setup_logging():
 
     _reduce_logging()
 
+
 def _reduce_logging():
     logging.getLogger('git.cmd').setLevel(logging.WARNING)
     logging.getLogger('git.repo.base').setLevel(logging.WARNING)

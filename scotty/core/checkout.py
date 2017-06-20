@@ -16,19 +16,19 @@ class CheckoutManager(object):
 
     def is_git_dir(self, path):
         return os.path.isdir('{path}/.git'.format(path=path))
-        
+
     def _get_repo(self, git_url, workspace):
         if not self.is_git_dir(workspace.path):
             repo = git.Repo.clone_from(git_url, workspace.path)
         else:
             repo = git.Repo(workspace.path)
         return repo
-            
+
     def _sync_repo(self, repo):
         repo.git.remote('update')
         repo.git.reset('--hard')
         repo.git.clean('-x', '-f', '-d', '-q')
-        
+
     def _checkout_ref(self, repo, git_ref):
         if git_ref is not None:
             repo.remotes.origin.fetch(refspec=git_ref)
