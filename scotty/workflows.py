@@ -52,6 +52,8 @@ class ExperimentPerformWorkflow(Workflow):
         self.experiment.workspace.create_paths()
 
     def _load(self):
+        if self._options.config:
+            self.experiment.workspace.config_path = self._options.config
         config = self._load_config()
         self.experiment.config = config
         for resource_config in config['resources']:

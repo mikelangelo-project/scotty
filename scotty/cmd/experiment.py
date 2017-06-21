@@ -26,12 +26,17 @@ class PerformParser(CommandParser):
             action='store',
             default='./')
         parser.add_argument(
+            '-c', '--config',
+            help='Path to experiment config',
+            dest='config',
+            action='store')
+        parser.add_argument(
             '-m', '--mock',
             help='Do not run the workloads',
             dest='mock',
             default=False,
             action='store_true')
-
+        
 
 @CommandRegistry.command
 class Command(object):

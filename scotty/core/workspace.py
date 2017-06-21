@@ -28,12 +28,18 @@ class Workspace(object):
 class ExperimentWorkspace(Workspace):
     @property
     def config_path(self):
-        path = os.path.join(self.path, 'experiment.yaml')
-        if not os.path.isfile(path):
-            path = os.path.join(self.path, 'experiment.yml')
-        if not os.path.isfile(path):
+        if not self._config_path:
+            path = os.path.join(self.path, 'experiment.yaml')
+            if not os.path.isfile(path):
+                path = os.path.join(self.path, 'experiment.yml')
+            self._config_path = path
+        if not os.path.isfile(self._config_path):
             raise ExperimentException('Could not find the experiment config file.')
-        return path
+        return self._config_path
+
+    @config_path.setter
+    def config_path(self, path):
+        self._config_path = path
 
     def create_paths(self):
         self.scotty_path = os.path.join(self.path, '.scotty')
