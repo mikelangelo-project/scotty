@@ -36,7 +36,7 @@ class PerformParser(CommandParser):
             dest='mock',
             default=False,
             action='store_true')
-        
+
 
 @CommandRegistry.command
 class Command(object):

@@ -2,11 +2,6 @@ import logging
 import os
 import sys
 
-from scotty.core.workspace import ResourceWorkspace
-from scotty.core.workspace import WorkloadWorkspace
-from scotty.core.workspace import ExperimentWorkspace
-from scotty.core.exceptions import WorkloadException
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,20 +31,10 @@ class Workload(Component):
         super(Workload, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.workload_gen'
-        self.resource_endpoints = {}
 
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'workload_gen.py')
-
-    def add_resource(self, workload_resource_name, resource):
-        config_resources = self.config.get('resources', None)
-        if config_resources:
-          if workload_resource_name in config_resources:
-            config_[workload_resource_name] = resource_endpoint
-            return
-        raise WorkloadException('Resource definition {} for workload {} not found'.format(
-            workload_resource_name, self.name))
 
 
 class Experiment(Component):

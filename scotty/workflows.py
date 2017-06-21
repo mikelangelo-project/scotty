@@ -177,7 +177,7 @@ class WorkloadRunWorkflow(Workflow):
 
     def _load(self):
         self.workload.config = self._load_config()
-        self.workload.module = ModuleLoader.load_by_component(self.workload) 
+        self.workload.module = ModuleLoader.load_by_component(self.workload)
 
     def _load_config(self):
         config = {}
