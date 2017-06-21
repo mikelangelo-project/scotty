@@ -1,0 +1,33 @@
+description: |
+  "This is a example for an experiment definition in scotty
+  The sections are
+    - description
+    - tags
+    - environment
+    - resources
+    - workloads"
+tags:
+  - sample_experiment
+  - sample01
+  - demo
+environment:
+  iocm: false
+  mcm:
+    module: schedulers.test_scheduler
+    class: TestScheduler
+resources:
+  - name: demo_resource
+    generator: git:git@gitlab.gwdg.de:scotty/resource/demo:master
+workloads:
+  - name: demo_workload
+    generator: file:workload/demo
+    resources:
+      demo_res: wrong_resource
+    params:
+      greeting: 'Hallo'
+  - name: demo_git_workload
+    generator: git:git@gitlab.gwdg.de:scotty/workload/demo:test
+    resources:
+      demo_res: demo_resource
+    params:
+      greeting: 'Hallo'

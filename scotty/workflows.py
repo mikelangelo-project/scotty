@@ -15,7 +15,7 @@ from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.context import Context
 from scotty.core.exceptions import ExperimentException
-
+from scotty.core.exceptions import ResourceException
 
 logger = logging.getLogger(__name__)
 
@@ -124,14 +124,42 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run(self):
         if not self._options.mock:
-            for workload in self.experiment.workloads.itervalues():
-                with self.experiment.workspace.cwd():
-                    context = Context(workload, self.experiment)
-                    try:
-                        workload.module.run(context)
-                    except:
-                        logger.exception(
-                            'Error from customer workload generator')
+            self._deploy_resources()
+            self._run_workload()
+
+    def _deploy_resources(self):
+        for resource in self.experiment.resources.itervalues():
+            with self.experiment.workspace.cwd():
+                context = Context(resource, self.experiment)
+                resource.module.deploy(context)
+                resource.endpoint = resource.module.create_endpoint(context)
+
+    def _run_workload(self):
+        for workload in self.experiment.workloads.itervalues():
+            try:
+                self._translate_workload_resource_config(workload)
+            except ResourceException as e:
+                logger.error(
+                    'Cannot translate resources for workload {} - {}'.format(
+                        workload.name, e))
+                logger.warning('Skip running workload {}'.format(workload.name))
+                continue
+            with self.experiment.workspace.cwd():
+                context = Context(workload, self.experiment)
+                try:
+                    workload.module.run(context)
+                except:
+                    logger.exception(
+                        'Error from customer workload generator')
+
+    def _translate_workload_resource_config(self, workload):
+        workload_resource_config = workload.config.get('resources', {})
+        for workload_resource_name in workload_resource_config:
+            resource_name = workload_resource_config[workload_resource_name]
+            resource = self.experiment.resources.get(resource_name, None)
+            if not resource:
+                raise ResourceException('Can not find resource ({})'.format(resource_name))
+            workload_resource_config[workload_resource_name] = resource.endpoint
 
 
 class WorkloadRunWorkflow(Workflow):

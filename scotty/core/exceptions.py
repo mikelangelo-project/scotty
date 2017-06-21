@@ -8,3 +8,7 @@ class ExperimentException(ScottyException):
 
 class WorkloadException(ScottyException):
     pass
+
+
+class ResourceException(ScottyException):
+    pass

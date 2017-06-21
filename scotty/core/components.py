@@ -5,6 +5,7 @@ import sys
 from scotty.core.workspace import ResourceWorkspace
 from scotty.core.workspace import WorkloadWorkspace
 from scotty.core.workspace import ExperimentWorkspace
+from scotty.core.exceptions import WorkloadException
 
 
 logger = logging.getLogger(__name__)
@@ -35,33 +36,33 @@ class Workload(Component):
         super(Workload, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.workload_gen'
-        self.workspace_type = WorkloadWorkspace
+        self.resource_endpoints = {}
 
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'workload_gen.py')
 
+    def add_resource(self, workload_resource_name, resource):
+        config_resources = self.config.get('resources', None)
+        if config_resources:
+          if workload_resource_name in config_resources:
+            config_[workload_resource_name] = resource_endpoint
+            return
+        raise WorkloadException('Resource definition {} for workload {} not found'.format(
+            workload_resource_name, self.name))
+
 
 class Experiment(Component):
     def __init__(self):
         super(Experiment, self).__init__()
-        self._workloads = {}
-        self._resources = {}
-        self.workspace_type = ExperimentWorkspace
+        self.workloads = {}
+        self.resources = {}
 
     def add_workload(self, workload):
-        self._workloads[workload.name] = workload
+        self.workloads[workload.name] = workload
 
     def add_resource(self, resource):
-        self._resources[resource.name] = resource
-
-    @property
-    def workloads(self):
-        return self._workloads
-
-    @property
-    def resources(self):
-        return self._resources
+        self.resources[resource.name] = resource
 
 
 class Resource(Component):
@@ -69,7 +70,7 @@ class Resource(Component):
         super(Resource, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.resource_gen'
-        self.workload_type = ResourceWorkspace
+        self.endpoint = None
 
     @property
     def module_path(self):
