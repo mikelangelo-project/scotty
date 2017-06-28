@@ -45,7 +45,7 @@ class ExperimentTest(unittest.TestCase):
         experiment = Experiment()
         workload = Workload()
         workload.config = {'name': 'test_name'}
-        experiment.add_workload(workload)
+        experiment.add_component(workload)
         self.assertEquals(experiment.workloads['test_name'], workload)
         self.assertEquals(len(experiment.workloads), 1)
 

@@ -8,6 +8,7 @@ import mock
 
 from scotty.workflows import WorkloadRunWorkflow
 from scotty.core.components import Workload
+from scotty.core.components import Experiment
 from scotty.core.context import Context
 from scotty.core.workspace import WorkloadWorkspace
 from scotty.core.exceptions import WorkloadException 
@@ -47,18 +48,18 @@ class WorkloadConfigTest(WorkloadTest):
     def test_attributes(self):
         workload_config = self._get_workload_config()
         self.assertEquals(workload_config['name'], 'sample_workload')
-        self.assertEquals(workload_config['generator'], 'sample')
+        self.assertEquals(workload_config['generator'], 'file:.')
         self.assertTrue(isinstance(workload_config['params'], dict))
-        self.assertTrue(isinstance(workload_config['environment'], dict))
 
 
 class ContextTest(WorkloadTest):
     def test_v1_context(self):
+        experiment = Experiment()
         workload = Workload()
         workload_config = self._get_workload_config()
         workload.config = workload_config
-        context = Context(workload)
-        self.assertEquals(workload_config, context.v1.self.config)
+        context = Context(workload, experiment)
+        self.assertEquals(workload_config, context.v1.workload.config)
 
 
 class WorkflowTest(WorkloadTest):

@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 class Workflow(object):
     def __init__(self, options):
         self._options = options
-        self._checkout_manager = CheckoutManager()
         self._scotty_config = ScottyConfig()
         self.experiment = None
 
@@ -64,7 +63,7 @@ class ExperimentPerformWorkflow(Workflow):
             component.config = component_config
             workspace_path = self.experiment.workspace.get_component_path(component, True)
             component.workspace = Workspace.factory(component, workspace_path)
-            self._checkout_manager.populate(component, self.experiment.workspace.path)
+            CheckoutManager.populate(component, self.experiment.workspace.path)
             component.module = ModuleLoader.load_by_component(component)
             self.experiment.add_component(component)
 
