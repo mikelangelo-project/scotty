@@ -1,20 +1,14 @@
 import logging
-import os
 import yaml
-
-import distutils.dir_util as dir_util
 
 from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
 from scotty.core.moduleloader import ModuleLoader
-from scotty.core.workspace import ResourceWorkspace
-from scotty.core.workspace import WorkloadWorkspace
-from scotty.core.workspace import ExperimentWorkspace
+from scotty.core.workspace import Workspace
 from scotty.core.components import Experiment
 from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.context import Context
-from scotty.core.exceptions import ExperimentException
 from scotty.core.exceptions import ResourceException
 
 logger = logging.getLogger(__name__)
@@ -25,6 +19,7 @@ class Workflow(object):
         self._options = options
         self._checkout_manager = CheckoutManager()
         self._scotty_config = ScottyConfig()
+        self.experiment = None
 
     def run(self):
         self._prepare()
@@ -48,7 +43,7 @@ class Workflow(object):
 class ExperimentPerformWorkflow(Workflow):
     def _prepare(self):
         self.experiment = Experiment()
-        self.experiment.workspace = ExperimentWorkspace(self._options.workspace)
+        self.experiment.workspace = Workspace.factory(self.experiment, self._options.workspace)
         self.experiment.workspace.create_paths()
 
     def _load(self):
@@ -56,73 +51,28 @@ class ExperimentPerformWorkflow(Workflow):
             self.experiment.workspace.config_path = self._options.config
         config = self._load_config()
         self.experiment.config = config
-        for resource_config in config['resources']:
-            resource = Resource()
-            resource.config = resource_config
-            self._load_component(resource)
-            self.experiment.add_resource(resource)
-        for workload_config in config['workloads']:
-            workload = Workload()
-            workload.config = workload_config
-            self._load_component(workload)
-            self.experiment.add_workload(workload)
+        self._load_components(config['resources'], Resource)
+        self._load_components(config['workloads'], Workload)
+
+    def _load_components(self, component_configs, component_type):
+        for component_config in component_configs:
+            logger.info('Load component {}(type: {}, source: {})'.format(
+                component_config['name'],
+                component_type.__name__,
+                component_config['generator']))
+            component = component_type()
+            component.config = component_config
+            workspace_path = self.experiment.workspace.get_component_path(component, True)
+            component.workspace = Workspace.factory(component, workspace_path)
+            self._checkout_manager.populate(component, self.experiment.workspace.path)
+            component.module = ModuleLoader.load_by_component(component)
+            self.experiment.add_component(component)
 
     def _load_config(self):
         config = {}
         with open(self.experiment.workspace.config_path, 'r') as stream:
             config = yaml.load(stream)
         return config
-
-    def _load_component(self, component):
-        component.workspace = self._create_component_workspace(component)
-        self._populate_component(component)
-        component.module = ModuleLoader.load_by_component(component)
-
-    def _populate_component(self, component):
-        if component.issource('git'):
-            self._checkout_component(component)
-        elif component.issource('file'):
-            self._copy_component(component)
-        else:
-            raise ExperimentException('Unsupported source type, Use "git" or "file"')
-
-    def _checkout_component(self, component):
-        source = component.config['generator'].split(':')
-        git_url = "{}:{}".format(source[1], source[2])
-        git_ref = None
-        if len(source) > 3:
-            git_ref = source[3]
-        logger.info('Clone component generator ({}) into workspace ({})'.format(
-            git_url,
-            component.workspace.path))
-        self._checkout_manager.checkout(git_url, component.workspace, git_ref)
-
-    def _copy_component(self, component):
-        source = component.config['generator'].split(':')
-        source_path = source[1]
-        logger.info('Copy component generator ({}) into workspace ({})'.format(
-            source_path,
-            component.workspace.path))
-        if os.path.isabs(source[1]):
-            error_message = 'Source ({}) for component generator ({}) must be relative'.format(
-                source_path,
-                component.name)
-            logger.error(error_message)
-            raise ExperimentException(error_message)
-        source_path_abs = os.path.join(self.experiment.workspace.path, source_path, '.')
-        dir_util.copy_tree(source_path_abs, component.workspace.path)
-
-    def _create_component_workspace(self, component):
-        workspace_path = self.experiment.workspace.get_component_path(component)
-        if component.isinstance('Workload'):
-            workspace = WorkloadWorkspace(workspace_path)
-        elif component.isinstance('Resource'):
-            workspace = ResourceWorkspace(workspace_path)
-        else:
-            raise ExperimentException('Component {} is not supported'.format(type(component)))
-        if not os.path.isdir(workspace.path):
-            os.mkdir(workspace.path)
-        return workspace
 
     def _run(self):
         if not self._options.mock:
@@ -171,9 +121,20 @@ class WorkloadRunWorkflow(Workflow):
         if not self.workload:
             self.workload = Workload()
         if not self.workload.workspace:
-            self.workload.workspace = WorkloadWorkspace(self._options.workspace)
+            self.workload.workspace = Workspace.factory(self.workload, self._options.workspace)
         if not self.workload.workspace.config_path:
             self.workload.workspace.config_path = self._options.config
+
+    @property
+    def dummy_experiment(self):
+        """ Prepae a dummy experiment for the workload
+        Experiment is mandatory for context so we prepare one with the same workspace like
+        the workload
+        """
+        self.experiment = Experiment()
+        self.experiment.workspace = Workspace.factory(
+            self.experiment,
+            self.workload.workspace.path)
 
     def _load(self):
         self.workload.config = self._load_config()
@@ -188,7 +149,7 @@ class WorkloadRunWorkflow(Workflow):
     def _run(self):
         if not self._options.mock:
             with self.workload.workspace.cwd():
-                context = Context(self.workload)
+                context = Context(self.workload, self.dummy_experiment)
                 try:
                     self.workload.module.run(context)
                 except:
@@ -200,8 +161,20 @@ class ResourceDeployWorkflow(Workflow):
 
     def _prepare(self):
         self.resource = Resource()
-        self.resource.workspace = ResourceWorkspace(self._options.workspace)
+        self.resource.workspace = Workspace.factory(self.resource, self._options.workspace)
         self.resource.workspace.config_path = self._options.config
+
+    def dummy_experiment(self):
+        """ A dummy experiment for the resource
+        Experiment is mandatory for context so we prepare one with the same workspace like
+        the resource
+        """
+        if not self.experiment:
+            self.experiment = Experiment()
+            self.experiment.workspace = Workspace.factory(
+                self.experiment,
+                self.resource.workspace.path)
+        return self.experiment
 
     def _load(self):
         self.resource.config = self._load_config()
@@ -215,7 +188,7 @@ class ResourceDeployWorkflow(Workflow):
 
     def _run(self):
         if not self._options.mock:
-            context = Context(self.resource)
+            context = Context(self.resource, self.dummy_experiment)
             try:
                 self.resource.endpoint = self.resource.module.deploy(context)
             except:

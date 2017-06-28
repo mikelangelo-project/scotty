@@ -2,6 +2,8 @@ import logging
 import os
 import sys
 
+from scotty.core.context import ContextAccessible
+from scotty.core.exceptions import ExperimentException
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +12,11 @@ class Component(object):
     def __init__(self):
         self.config = None
         self.workspace = None
+        self._setaccess('config')
+        self._setaccess('name')
+
+    def _setaccess(self, parameter):
+        ContextAccessible(self.__class__.__name__).setaccess(parameter)
 
     @property
     def name(self):
@@ -24,6 +31,11 @@ class Component(object):
     def isinstance(self, type_str):
         class_ = getattr(sys.modules[__name__], type_str)
         return isinstance(self, class_)
+
+    @property
+    def type(self):
+        type_ = self.__class__.__name__
+        return type_.lower()
 
 
 class Workload(Component):
@@ -43,11 +55,14 @@ class Experiment(Component):
         self.workloads = {}
         self.resources = {}
 
-    def add_workload(self, workload):
-        self.workloads[workload.name] = workload
-
-    def add_resource(self, resource):
-        self.resources[resource.name] = resource
+    def add_component(self, component):
+        if component.isinstance('Workload'):
+            self.workloads[component.name] = component
+        elif component.isinstance('Resource'):
+            self.resources[component.name] = component
+        else:
+            raise ExperimentException(
+                'Component {} can not added to experiment'.format(component.type))
 
 
 class Resource(Component):

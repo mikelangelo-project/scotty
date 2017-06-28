@@ -5,11 +5,9 @@ logger = logging.getLogger(__name__)
 
 
 def run(context):
-    name = context.v1.self.name
-    print 'Hey there,'
-    print 'my name is {name} '.format(name=name),
-    print 'and I\'m running a dummy workload with my config:'
-    print '{context}'.format(context=context.v1.self.config)
-    print 'params'
-    print '{params}'.format(params=context.v1.self.config['params'])
-    raise Exception('TestException')
+    workload_config = context.v1.workload.config
+    workload_params = workload_config['params']
+    print '{}'.format(workload_params['greeting'])
+    print 'I\'m a workload generator, my name is {} '.format(context.v1.workload.name),
+    print 'and I\'m running a demo workload with my config:'
+    print '{}'.format(workload_config)

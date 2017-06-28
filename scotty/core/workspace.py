@@ -24,6 +24,18 @@ class Workspace(object):
         yield
         os.chdir(prev_cwd)
 
+    @classmethod
+    def factory(cls, component, workspace_path):
+        if component.isinstance('Workload'):
+            workspace = WorkloadWorkspace(workspace_path)
+        elif component.isinstance('Resource'):
+            workspace = ResourceWorkspace(workspace_path)
+        elif component.isinstance('Experiment'):
+            workspace = ExperimentWorkspace(workspace_path)
+        else:
+            raise ExperimentException('Component {} is not supported'.format(type(component)))
+        return workspace
+
 
 class ExperimentWorkspace(Workspace):
     @property
@@ -61,7 +73,7 @@ class ExperimentWorkspace(Workspace):
         if not os.path.isdir(self.resources_path):
             os.mkdir(self.resources_path)
 
-    def get_component_path(self, component):
+    def get_component_path(self, component, create_on_demand=False):
         path = None
         if component.isinstance('Workload'):
             path = os.path.join(self.workloads_path, component.name)
@@ -69,6 +81,8 @@ class ExperimentWorkspace(Workspace):
             path = os.path.join(self.resources_path, component.name)
         else:
             raise ExperimentException('Component {} is not supported'.format(type(component)))
+        if create_on_demand and not os.path.isdir(path):
+            os.mkdir(path)
         return path
 
 
