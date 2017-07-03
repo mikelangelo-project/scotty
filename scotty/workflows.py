@@ -75,26 +75,27 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run(self):
         if not self._options.mock:
-            self._deploy_resources()
-            self._run_workload()
+            try:
+                self._deploy_resources()
+                self._run_workloads()
+            except:
+                logger.exception('Error from costomer component')
+            finally:
+                logger.info('Clean resources')
+                self._clean_resources()
 
     def _deploy_resources(self):
         for resource in self.experiment.resources.itervalues():
             with self.experiment.workspace.cwd():
                 context = Context(resource, self.experiment)
-                resource.module.deploy(context)
-                resource.endpoint = resource.module.create_endpoint(context)
+                try:
+                    resource.module.deploy(context)
+                    resource.endpoint = resource.module.create_endpoint(context)
+                except:
+                    raise ResourceException('Error from customer resource ({})'.format(resource.name))
 
-    def _run_workload(self):
+    def _run_workloads(self):
         for workload in self.experiment.workloads.itervalues():
-            try:
-                self._translate_workload_resource_config(workload)
-            except ResourceException as e:
-                logger.error(
-                    'Cannot translate resources for workload {} - {}'.format(
-                        workload.name, e))
-                logger.warning('Skip running workload {}'.format(workload.name))
-                continue
             with self.experiment.workspace.cwd():
                 context = Context(workload, self.experiment)
                 try:
@@ -103,15 +104,11 @@ class ExperimentPerformWorkflow(Workflow):
                     logger.exception(
                         'Error from customer workload generator')
 
-    def _translate_workload_resource_config(self, workload):
-        workload_resource_config = workload.config.get('resources', {})
-        for workload_resource_name in workload_resource_config:
-            resource_name = workload_resource_config[workload_resource_name]
-            resource = self.experiment.resources.get(resource_name, None)
-            if not resource:
-                raise ResourceException('Can not find resource ({})'.format(resource_name))
-            workload_resource_config[workload_resource_name] = resource.endpoint
+    def _result_workloads(self):
+        pass
 
+    def _clean_resources(self):
+        pass
 
 class WorkloadRunWorkflow(Workflow):
     workload = None

@@ -43,10 +43,20 @@ class Workload(Component):
         super(Workload, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.workload_gen'
+        self._setaccess('params')
+        self._setaccess('resources')
 
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'workload_gen.py')
+   
+    @property
+    def params(self):
+        return self.config['params']
+
+    @property
+    def resources(self):
+        return self.config['resources']
 
 
 class Experiment(Component):
@@ -71,6 +81,7 @@ class Resource(Component):
         self.module = None
         self.parent_module_name = 'scotty.resource_gen'
         self.endpoint = None
+        self._setaccess('endpoint')
 
     @property
     def module_path(self):
