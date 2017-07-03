@@ -26,7 +26,7 @@ workloads:
     params:
       greeting: 'Hallo'
   - name: demo_git_workload
-    generator: git:git@gitlab.gwdg.de:scotty/workload/demo:test
+    generator: git:git@gitlab.gwdg.de:scotty/workload/demo:master
     resources:
       demo_res: demo_resource
     params:

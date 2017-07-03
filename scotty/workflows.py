@@ -10,6 +10,7 @@ from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.context import Context
 from scotty.core.exceptions import ResourceException
+from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
 
@@ -75,40 +76,74 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run(self):
         if not self._options.mock:
+            self._check_components()
             try:
                 self._deploy_resources()
                 self._run_workloads()
+                self._result_workloads()
             except:
-                logger.exception('Error from costomer component')
-            finally:
-                logger.info('Clean resources')
-                self._clean_resources()
+                pass
+
+    def _check_components(self):
+        for resource in self.experiment.resources.itervalues():
+            logger.info('Check resource ({})'.format(resource.name))
+            for interface_ in ('endpoint', 'deploy', 'clean'):
+                try:
+                    getattr(resource.module, interface_) 
+                except:
+                    err_msg = 'Missing interface {} for resource {}'.format(
+                            interface_, resource.name)
+                    logger.error(err_msg)
+                    raise ScottyException(err_msg)
+        for workload in self.experiment.workloads.itervalues():
+            logger.info('Check workload ({})'.format(workload.name))
+            for interface_ in ('run', 'result'):
+                try:
+                    getattr(workload.module, interface_)
+                except:
+                    err_msg = 'Missing interface ({}) for workload ({})'.format(
+                            interface_, resource.name)
+                    logger.error(err_msg)
+                    raise ScottyException(err_msg)
 
     def _deploy_resources(self):
         for resource in self.experiment.resources.itervalues():
+            logger.info('Deploy resource ({})'.format(resource.name))
             with self.experiment.workspace.cwd():
                 context = Context(resource, self.experiment)
                 try:
                     resource.module.deploy(context)
-                    resource.endpoint = resource.module.create_endpoint(context)
+                    resource.endpoint = resource.module.endpoint(context)
                 except:
-                    raise ResourceException('Error from customer resource ({})'.format(resource.name))
+                    logger.exception('Error from customer resource ({})'.format(resource.name))
+                    raise ResourceException()
 
     def _run_workloads(self):
         for workload in self.experiment.workloads.itervalues():
+            logger.info('Run workload ({})'.format(workload.name))
             with self.experiment.workspace.cwd():
                 context = Context(workload, self.experiment)
                 try:
                     workload.module.run(context)
                 except:
-                    logger.exception(
-                        'Error from customer workload generator')
+                    logger.exception('Error from customer workload ({})'.format(workload.name))
+                    raise WorkloadException()
 
     def _result_workloads(self):
         pass
 
+    def _clean(self):
+        self._clean_resources()
+
     def _clean_resources(self):
-        pass
+        for resource in self.experiment.resources.itervalues():
+             logger.info('Clean resource ({})'.format(resource.name))
+             with self.experiment.workspace.cwd():
+                context = Context(resource, self.experiment)
+                try:
+                    resource.module.clean(context)
+                except:
+                    logger.exception('Error from customer resource ({})'.format(resource.name))
 
 class WorkloadRunWorkflow(Workflow):
     workload = None
