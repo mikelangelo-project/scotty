@@ -1,2 +1,2 @@
-import scotty.utils
-scotty.utils.setup_logging()
+from  scotty import log
+log.setup_logging()
