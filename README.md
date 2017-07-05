@@ -12,18 +12,6 @@ Perform a experiment
     cd /path/to/experiment
     scotty experiment perform
 
-Run a workload
---------------
-
-    cd /path/to/workload/
-    scotty workload run -c samples/workload.yaml
-
-Deploy a resource
------------------
-
-    cd /path/to/resource/
-    scotty resource deploy -c samples/resource.yaml
-
 Run the tests
 -------------
 
