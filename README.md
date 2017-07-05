@@ -1,19 +1,30 @@
 Scotty
 ======
 
-Run a Workload
+Add scotty to user bin
+----------------------
+
+    ln -s /path/to/scotty/scotty.py /usr/bin/scotty
+
+Perform a experiment
+--------------------
+    
+    cd /path/to/experiment
+    scotty experiment perform
+
+Run a workload
 --------------
 
     cd /path/to/workload/
-    ./scotty.py workload run -c samples/workload.yaml
+    scotty workload run -c samples/workload.yaml
 
-Run an Experiment
+Deploy a resource
 -----------------
-    
-    cd /path/to/experiment
-    ./scotty.py experiment perform
 
-Run the Tests
+    cd /path/to/resource/
+    scotty resource deploy -c samples/resource.yaml
+
+Run the tests
 -------------
 
     python -m unittest discover tests
@@ -21,7 +32,7 @@ Run the Tests
     python-coverage run --source=. -m unittest discover -s tests/
     python-coverage report -m --omit=scotty/legacy/*,scotty/cmd/legacy.py
 
-Run the Tests with pytest
+Run the tests with pytest
 -------------------------
 
     pytest
