@@ -19,14 +19,6 @@ Perform a experiment
 Run the tests
 -------------
 
-    python -m unittest discover tests
-
-    python-coverage run --source=. -m unittest discover -s tests/
-    python-coverage report -m --omit=scotty/legacy/*,scotty/cmd/legacy.py
-
-Run the tests with pytest
--------------------------
-
     pytest
     
 Rebase changed master into your feature/<branch>
