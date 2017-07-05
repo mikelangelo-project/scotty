@@ -29,10 +29,14 @@ Rebase changed master into your feature/<branch>
     git rebase origin/master
     git push
 
-Install Gitlab Runner 
---------------------
+Setup automatic experiment environment in gitlab
+----------------------------------------------------
+
+### Install Gitlab Runner
 
 https://docs.gitlab.com/runner/install/linux-repository.html
+
+Add repository source and pin
 
     curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.deb.sh | sudo bash
 
@@ -43,7 +47,11 @@ https://docs.gitlab.com/runner/install/linux-repository.html
     Pin-Priority: 1001
     EOF
 
+Install runner
+
     sudo apt-get install gitlab-ci-multi-runner
+
+Register and setup runner
 
     # User Token from the project and tag "scotty-agent"
     sudo gitlab-ci-multi-runner register
@@ -60,5 +68,7 @@ https://docs.gitlab.com/runner/install/linux-repository.html
     limit = 1
     [runners.cache]
     
+Restart and verify runner
+
     gitlab-runner restart
     gitlab-runner verify
