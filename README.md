@@ -4,7 +4,7 @@ Scotty
 Download and Install 
 --------------------
 
-Clone from repository and run pip install -r requirements. Scotty run with **Python 2.7**. 
+Clone from repository and run pip install -r requirements.txt. Scotty run with **Python 2.7**. 
     
 ### Add scotty to /usr/bin    
 
