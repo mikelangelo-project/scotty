@@ -62,7 +62,7 @@ class ExperimentPerformWorkflow(Workflow):
                 component_config['generator']))
             component = component_type()
             component.config = component_config
-            workspace_path = self.experiment.workspace.get_component_path(component, True)
+            workspace_path = self.experiment.workspace.get_component_path(component)
             component.workspace = Workspace.factory(component, workspace_path)
             CheckoutManager.populate(component, self.experiment.workspace.path)
             component.module = ModuleLoader.load_by_component(component)

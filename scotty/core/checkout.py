@@ -2,7 +2,7 @@ import logging
 import os
 
 import git
-import distutils.dir_util as dir_util
+import shutil
 
 from scotty.core.exceptions import ScottyException
 
@@ -32,7 +32,9 @@ class CheckoutManager(object):
             logger.error(error_message)
             raise ScottyException(error_message)
         source_path_abs = os.path.join(base_path, source_path, '.')
-        dir_util.copy_tree(source_path_abs, component.workspace.path)
+        shutil.rmtree(component.workspace.path, True)
+        ignore_scotty = shutil.ignore_patterns(".scotty")
+        shutil.copytree(source_path_abs, component.workspace.path, ignore=ignore_scotty)
 
     @classmethod
     def checkout(cls, git_url, workspace, git_ref=None):

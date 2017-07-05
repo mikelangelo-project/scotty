@@ -1,34 +1,17 @@
 Scotty
 ======
 
-Run Legacy Experiment
----------------------
-
-    source ./samples/experiment
-    ./scotty.py legacy experiment -w /path/to/workspace
-
-Run Legacy Workload-Generator
------------------------------
-
-Checkout from zuul and run workload:
-
-    source ./samples/workload-generator
-    ./scotty.py legacy workload_generator -w /path/to/workspace
-    
-Skip checkout and run existing workload from workspace:
-
-    ./scotty.py legacy workload_generator -w /path/to/workspace -s
-
 Run a Workload
 --------------
 
-    ./scotty.py workload run -w samples/workload
+    cd /path/to/workload/
+    ./scotty.py workload run -c samples/workload.yaml
 
 Run an Experiment
 -----------------
-
-    ./scotty.py experiment run -w samples/component/experiment/ -s
-
+    
+    cd /path/to/experiment
+    ./scotty.py experiment perform
 
 Run the Tests
 -------------
