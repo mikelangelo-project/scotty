@@ -1,8 +1,12 @@
 Scotty
 ======
 
-Add scotty to user bin
-----------------------
+Download and Install 
+--------------------
+
+Clone from repository and run pip install -r requirements. Scotty run with **Python 2.7**. 
+    
+### Add scotty to /usr/bin    
 
     ln -s /path/to/scotty/scotty.py /usr/bin/scotty
 
