@@ -1,5 +1,0 @@
-workload:
-  name: sample_workload
-  generator: file:.
-  params:
-    greeting: 'Hallo' 

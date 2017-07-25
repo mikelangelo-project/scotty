@@ -16,7 +16,6 @@ def deploy(context):
     print 'my name is {} '.format(name),
     print 'and I\'m deploy a dummy resource with my config:'
     print '{}'.format(context.v1.resource.config)
-    raise Exception('TestException')
 
 def clean(context):
     pass

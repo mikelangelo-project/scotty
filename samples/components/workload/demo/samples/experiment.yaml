@@ -1,0 +1,12 @@
+desciption: experiment with two demo workloads
+tags:
+  - demo
+workloads:
+  - name: demo_workload_1
+    generator: file:.
+    params:
+      greeting: "Hallo"
+  - name: demo_workload_2
+    generator: file:.
+    params:
+      greeting: "Hallo2"

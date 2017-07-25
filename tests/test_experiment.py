@@ -57,11 +57,13 @@ class ExperimentWorkflowTest(unittest.TestCase):
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._prepare')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._load')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._run')
-    def test_run(self, prepare_mock, load_mock, run_mock):
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._clean')
+    def test_run(self, prepare_mock, load_mock, run_mock, clean_mock):
         self.workflow.run()
         prepare_mock.assert_called()
         load_mock.assert_called()
         run_mock.assert_called()
+        clean_mock.assert_called()
 
     def test_prepare(self):
         options_mock = mock.MagicMock(workspace='.')

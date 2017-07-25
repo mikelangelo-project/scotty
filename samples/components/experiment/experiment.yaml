@@ -17,17 +17,17 @@ environment:
     class: TestScheduler
 resources:
   - name: demo_resource
-    generator: git:git@gitlab.gwdg.de:scotty/resource/demo:master
+    generator: file:resource/demo
 workloads:
-  - name: demo_workload
+  - name: demo_workload_1
     generator: file:workload/demo
     resources:
       demo_res: demo_resource
     params:
-      greeting: 'Hallo'
-  - name: demo_git_workload
-    generator: git:git@gitlab.gwdg.de:scotty/workload/demo:master
+      greeting: 'Hallo(1)'
+  - name: demo_workload_2
+    generator: file:workload/demo
     resources:
       demo_res: demo_resource
     params:
-      greeting: 'Hallo'
+      greeting: 'Hallo(2)'

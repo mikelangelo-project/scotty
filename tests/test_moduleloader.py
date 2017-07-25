@@ -5,7 +5,7 @@ import imp
 from scotty.core.moduleloader import ModuleLoader
 
 class ModuleLoaderTest(unittest.TestCase):
-    workload_path = 'samples/components/workload/workload_gen.py'
+    workload_path = 'samples/components/experiment/workload/demo/workload_gen.py'
 
     def make_module(self, name, **args):
         mod = sys.modules.setdefault(name, imp.new_module(name))
