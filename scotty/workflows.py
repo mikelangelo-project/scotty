@@ -181,6 +181,7 @@ class WorkloadInitWorkflow(Workflow):
             os.makedirs(self.workload.workspace.path)
         self._create_workload_gen()
         self._create_samples()
+        self._create_readme()
 
     def _create_workload_gen(self):
         with open(self.workload.module_path, 'w+') as wm_file:
@@ -201,6 +202,9 @@ class WorkloadInitWorkflow(Workflow):
             wm_file.write('    print \'{}\'.format(workload.params[\'greeting\'])\n')
             wm_file.write('    print \'I\\\'m workload generator {}\'.format(workload.name)\n')
             wm_file.write('#    print \'The resource endpoint is {}\'.format(my_resource)\n')
+            wm_file.write('\n')
+            wm_file.write('def clean(context):\n')
+            wm_file.write('    pass\n')
 
     def _create_samples(self):
         samples_dir = os.path.join(self.workload.workspace.path, 'samples')
@@ -224,3 +228,9 @@ class WorkloadInitWorkflow(Workflow):
             exp_file.write('      greeting: Hallo\n')
             exp_file.write('#    resource:\n')
             exp_file.write('#      my_resource: my_resource_def\n')
+
+    def _create_readme(self):
+        readme_md = os.path.join(self.workload.workspace.path, 'README.md')
+        this_script_dir = os.path.dirname(os.path.realpath(__file__))
+        readme_md_template = os.path.join(this_script_dir, '../templates/README.md.workload')
+        shutil.copyfile(readme_md_template, readme_md)
