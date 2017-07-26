@@ -12,8 +12,7 @@ Directory structure
 Getting Started
 ---------------
 
-Implement the workload generator like a python module. Your code should implemented under a subdirectory.
-
+Implement the workload generator like a python module. Your code should implemented under a subdirectory.    
 Three interfaces must be implemented from workload_gen.py:
 
 | Methode         | Description |
@@ -46,19 +45,29 @@ experiment.yaml:
         params:
           greeting: Hallo
 
-You can define a description and a list of tags for the experiment. Inside the section workloads you can define a list of workloads. The name is your choice but must be unique. 
-
+You can define a description and a list of tags for the experiment. Inside the section workloads you can define a list of workloads. The name is your choice but must be unique.    
 The generator must be an existing directory relative to the experiment workspace (where you run 'scotty experiment perform') or a public git repository. Samples:
 
+Existing workload generator in a directory where you run 'scotty experiment perform':
+
     generator: file:.
+
+Existing workload generator in a public git repository:
 
     generator: git:git@gitolite.gwdg.de:scotty/workload/demo:master
 
 The params section is free for use. So you can add a list of self-defined paramters. This parameters can called by the context from your workload_generator. Samples:
 
+experiment.yaml section workloads
+
+    ...
     params:
       greeting: Hallo
+    ...
+    
+Implementation in the workload module
 
     def run(context):
       workload = context.v1.workload
       greeting = workload.params['greeting']
+
