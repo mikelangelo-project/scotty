@@ -1,5 +1,8 @@
 import logging
 import yaml
+import os
+
+import shutil
 
 from scotty.config import ScottyConfig
 from scotty.core.checkout import CheckoutManager
@@ -28,10 +31,10 @@ class Workflow(object):
         self._clean()
 
     def _prepare(self):
-        raise NotImplementedError('Workflow._prepare(self) must be implemented')
+        pass
 
     def _load(self):
-        raise NotImplementedError('Workflow._load(self) must be implemented')
+        pass
 
     def _run(self):
         raise NotImplementedError('Workflow._run(self) must be implemented')
@@ -51,7 +54,8 @@ class ExperimentPerformWorkflow(Workflow):
             self.experiment.workspace.config_path = self._options.config
         config = self._load_config()
         self.experiment.config = config
-        self._load_components(config['resources'], Resource)
+        if 'resources' in config:
+            self._load_components(config['resources'], Resource)
         self._load_components(config['workloads'], Workload)
 
     def _load_components(self, component_configs, component_type):
@@ -144,3 +148,79 @@ class ExperimentPerformWorkflow(Workflow):
                     resource.module.clean(context)
                 except:
                     logger.exception('Error from customer resource ({})'.format(resource.name))
+
+
+class ExperimentCleanWorkflow(Workflow):
+    def _prepare(self):
+        self.experiment = Experiment()
+        self.experiment.workspace = Workspace.factory(self.experiment, self._options.workspace)
+        self.experiment.workspace.create_paths()
+
+    def _run(self):
+        logger.info('Delete scotty path ({})'.format(self.experiment.workspace.scotty_path))
+        shutil.rmtree(self.experiment.workspace.scotty_path)
+
+class WorkloadInitWorkflow(Workflow):
+    def _prepare(self):
+        self.workload = Workload()
+        self.workload.workspace = Workspace.factory(self.workload, self._options.directory)
+        self._check_existing_workload()
+
+    def _check_existing_workload(self):
+        if os.path.isfile(self.workload.module_path):
+            raise ScottyException(
+                'Destination {} is already an existing workload'.format(
+                    self.workload.workspace.path))
+
+    def _run(self):
+        logger.info(
+            'Start to create structure for workload (dir: {})'.format(
+                self.workload.workspace.path))
+        if not os.path.isdir(self.workload.workspace.path):
+            logger.info('Create directory {}'.format(self.workload.workspace.path))
+            os.makedirs(self.workload.workspace.path)
+        self._create_workload_gen()
+        self._create_samples()
+
+    def _create_workload_gen(self):
+        with open(self.workload.module_path, 'w+') as wm_file:
+            wm_file.write('import logging\n')
+            wm_file.write('\n')
+            wm_file.write('from scotty import utils\n')
+            wm_file.write('\n')
+            wm_file.write('logger = logging.getLogger(__name__)')
+            wm_file.write('\n')
+            wm_file.write('\n')
+            wm_file.write('def result(context):\n')
+            wm_file.write('    pass\n')
+            wm_file.write('\n')
+            wm_file.write('def run(context):\n')
+            wm_file.write('    workload = context.v1.workload\n')
+            wm_file.write('    exp_helper = utils.ExperimentHelper(context)\n')
+            wm_file.write('#    my_resource = exp_helper.get_resource(workload.resources[\'my_resource\']\n')
+            wm_file.write('    print \'{}\'.format(workload.params[\'greeting\'])\n')
+            wm_file.write('    print \'I\\\'m workload generator {}\'.format(workload.name)\n')
+            wm_file.write('#    print \'The resource endpoint is {}\'.format(my_resource)\n')
+
+    def _create_samples(self):
+        samples_dir = os.path.join(self.workload.workspace.path, 'samples')
+        if not os.path.isdir(samples_dir):
+            os.mkdir(samples_dir)
+        sample_exp_yaml = os.path.join(samples_dir, 'experiment.yaml')
+        with open(sample_exp_yaml, 'w+') as exp_file:
+            exp_file.write('description: my experiment with my workload\n')
+            exp_file.write('tags:\n')
+            exp_file.write('  - my_tag\n')
+            exp_file.write('#resources:\n')
+            exp_file.write('#  - name: my_resource_def\n')
+            exp_file.write('#    generator: git:git@gitlab.gwdg.de:scotty/resource/demo.git\n')
+            exp_file.write('#    params:\n')
+            exp_file.write('#      user: myuser\n')
+            exp_file.write('#      passwd: <%= ENV[\'mysecret\'] %>\n')
+            exp_file.write('workloads:\n')
+            exp_file.write('  - name: myworkload\n')
+            exp_file.write('    generator: file:.\n')
+            exp_file.write('    params:\n')
+            exp_file.write('      greeting: Hallo\n')
+            exp_file.write('#    resource:\n')
+            exp_file.write('#      my_resource: my_resource_def\n')
