@@ -14,8 +14,8 @@ def endpoint(context):
 
 def deploy(context):
     resource = context.v1.resource
-    print 'Hey there,'
-    print 'I\'m resource generator {}'.format(resource.name)
+    logger.info('Hey there,')
+    logger.info('I\'m resource generator {}'.format(resource.name))
 
 def clean(context):
     pass
