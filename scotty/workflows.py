@@ -162,6 +162,8 @@ class ExperimentCleanWorkflow(Workflow):
 
 class WorkloadInitWorkflow(Workflow):
     def _prepare(self):
+        self.template_dir = os.path.dirname(os.path.realpath(__file__))
+        self.template_dir = os.path.join(self.template_dir, '../templates')
         self.workload = Workload()
         self.workload.workspace = Workspace.factory(self.workload, self._options.directory)
         self._check_existing_workload()
@@ -184,53 +186,18 @@ class WorkloadInitWorkflow(Workflow):
         self._create_readme()
 
     def _create_workload_gen(self):
-        with open(self.workload.module_path, 'w+') as wm_file:
-            wm_file.write('import logging\n')
-            wm_file.write('\n')
-            wm_file.write('from scotty import utils\n')
-            wm_file.write('\n')
-            wm_file.write('logger = logging.getLogger(__name__)')
-            wm_file.write('\n')
-            wm_file.write('\n')
-            wm_file.write('def result(context):\n')
-            wm_file.write('    pass\n')
-            wm_file.write('\n')
-            wm_file.write('def run(context):\n')
-            wm_file.write('    workload = context.v1.workload\n')
-            wm_file.write('    exp_helper = utils.ExperimentHelper(context)\n')
-            wm_file.write('#    my_resource = exp_helper.get_resource(workload.resources[\'my_resource\']\n')
-            wm_file.write('    print \'{}\'.format(workload.params[\'greeting\'])\n')
-            wm_file.write('    print \'I\\\'m workload generator {}\'.format(workload.name)\n')
-            wm_file.write('#    print \'The resource endpoint is {}\'.format(my_resource)\n')
-            wm_file.write('\n')
-            wm_file.write('def clean(context):\n')
-            wm_file.write('    pass\n')
+        workload_gen_py_template = os.path.join(self.template_dir, 'workload_gen.py.template')
+        shutil.copyfile(workload_gen_py_template, self.workload.module_path)
 
     def _create_samples(self):
         samples_dir = os.path.join(self.workload.workspace.path, 'samples')
         if not os.path.isdir(samples_dir):
             os.mkdir(samples_dir)
-        sample_exp_yaml = os.path.join(samples_dir, 'experiment.yaml')
-        with open(sample_exp_yaml, 'w+') as exp_file:
-            exp_file.write('description: my experiment with my workload\n')
-            exp_file.write('tags:\n')
-            exp_file.write('  - my_tag\n')
-            exp_file.write('#resources:\n')
-            exp_file.write('#  - name: my_resource_def\n')
-            exp_file.write('#    generator: git:git@gitlab.gwdg.de:scotty/resource/demo.git\n')
-            exp_file.write('#    params:\n')
-            exp_file.write('#      user: myuser\n')
-            exp_file.write('#      passwd: <%= ENV[\'mysecret\'] %>\n')
-            exp_file.write('workloads:\n')
-            exp_file.write('  - name: myworkload\n')
-            exp_file.write('    generator: file:.\n')
-            exp_file.write('    params:\n')
-            exp_file.write('      greeting: Hallo\n')
-            exp_file.write('#    resource:\n')
-            exp_file.write('#      my_resource: my_resource_def\n')
-
+        experiment_yaml = os.path.join(samples_dir, 'experiment.yaml')
+        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.yaml.workload')
+        shutil.copyfile(experiment_yaml_template, experiment_yaml)
+         
     def _create_readme(self):
         readme_md = os.path.join(self.workload.workspace.path, 'README.md')
-        this_script_dir = os.path.dirname(os.path.realpath(__file__))
-        readme_md_template = os.path.join(this_script_dir, '../templates/README.md.workload')
+        readme_md_template = os.path.join(self.template_dir, 'README.md.workload')
         shutil.copyfile(readme_md_template, readme_md)
