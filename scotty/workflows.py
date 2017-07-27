@@ -56,7 +56,8 @@ class ExperimentPerformWorkflow(Workflow):
         self.experiment.config = config
         if 'resources' in config:
             self._load_components(config['resources'], Resource)
-        self._load_components(config['workloads'], Workload)
+        if 'workloads' in config:
+            self._load_components(config['workloads'], Workload)
 
     def _load_components(self, component_configs, component_type):
         for component_config in component_configs:
@@ -200,4 +201,47 @@ class WorkloadInitWorkflow(Workflow):
     def _create_readme(self):
         readme_md = os.path.join(self.workload.workspace.path, 'README.md')
         readme_md_template = os.path.join(self.template_dir, 'README.md.workload')
+        shutil.copyfile(readme_md_template, readme_md)
+
+
+class ResourceInitWorkflow(Workflow):
+    def _prepare(self):
+        self.template_dir = os.path.dirname(os.path.realpath(__file__))
+        self.template_dir = os.path.join(self.template_dir, '../templates')
+        self.resource = Resource()
+        self.resource.workspace = Workspace.factory(self.resource, self._options.directory)
+        self._check_existing_resource()
+
+    def _check_existing_resource(self):
+        if os.path.isfile(self.resource.module_path):
+            raise ScottyException(
+                'Destination {} is already an existing resource'.format(
+                    self.resource.workspace.path))
+
+    def _run(self):
+        logger.info(
+            'Start to create structure for resource (dir: {})'.format(
+                self.resource.workspace.path))
+        if not os.path.isdir(self.resource.workspace.path):
+            logger.info('Create directory {}'.format(self.resource.workspace.path))
+            os.makedirs(self.resource.workspace.path)
+        self._create_resource_gen()
+        self._create_samples()
+        self._create_readme()
+
+    def _create_resource_gen(self):
+        resource_gen_py_template = os.path.join(self.template_dir, 'resource_gen.py.template')
+        shutil.copyfile(resource_gen_py_template, self.resource.module_path)
+
+    def _create_samples(self):
+        samples_dir = os.path.join(self.resource.workspace.path, 'samples')
+        if not os.path.isdir(samples_dir):
+            os.mkdir(samples_dir)
+        experiment_yaml = os.path.join(samples_dir, 'experiment.yaml')
+        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.yaml.resource')
+        shutil.copyfile(experiment_yaml_template, experiment_yaml)
+
+    def _create_readme(self):
+        readme_md = os.path.join(self.resource.workspace.path, 'README.md')
+        readme_md_template = os.path.join(self.template_dir, 'README.md.resource')
         shutil.copyfile(readme_md_template, readme_md)

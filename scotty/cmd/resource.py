@@ -2,6 +2,8 @@ import logging
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
+from scotty.workflows import ResourceInitWorkflow
+from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +15,17 @@ class ResourceParser(CommandParser):
             help='Action',
             dest='action')
         initparser = subparsers.add_parser('init')
+        InitParser().add_arguments(initparser)
 
+class InitParser(CommandParser):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            'directory',
+            nargs='?',
+            metavar='directory',
+            type=str,
+            help="Directory where the resource repo will be created (Default:'./')",
+            default='./')
 
 @CommandRegistry.command
 class Command(object):
@@ -22,4 +34,8 @@ class Command(object):
 
     def execute(self):
         if self.options.action == 'init':
-            logger.info("Command 'scotty resource init' is not implemented yet")
+            try:
+                workflow = ResourceInitWorkflow(self.options)
+                workflow.run()
+            except ScottyException as err:
+                logger.error(err)

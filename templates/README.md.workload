@@ -70,4 +70,3 @@ Implementation in the workload module
     def run(context):
       workload = context.v1.workload
       greeting = workload.params['greeting']
-
