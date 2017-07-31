@@ -31,12 +31,6 @@ class ExperimentWorkspaceTest(unittest.TestCase):
         sample_path = os.path.abspath('samples/components/experiment/experiment.yaml')
         self.assertEquals(config_path, sample_path)
 
-    def test_workloads_path(self):
-        workspace = mock_workspace()
-        workloads_path = workspace.workloads_path
-        sample_path = os.path.abspath('samples/components/experiment/.workloads/')
-        self.assertEquals(workloads_path, sample_path)
-
     def test_cwd(self):
         workspace = mock_workspace()
         with workspace.cwd():
@@ -51,7 +45,7 @@ class ExperimentTest(unittest.TestCase):
         experiment = Experiment()
         workload = Workload()
         workload.config = {'name': 'test_name'}
-        experiment.add_workload(workload)
+        experiment.add_component(workload)
         self.assertEquals(experiment.workloads['test_name'], workload)
         self.assertEquals(len(experiment.workloads), 1)
 
@@ -63,11 +57,13 @@ class ExperimentWorkflowTest(unittest.TestCase):
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._prepare')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._load')
     @mock.patch('scotty.workflows.ExperimentPerformWorkflow._run')
-    def test_run(self, prepare_mock, load_mock, run_mock):
+    @mock.patch('scotty.workflows.ExperimentPerformWorkflow._clean')
+    def test_run(self, prepare_mock, load_mock, run_mock, clean_mock):
         self.workflow.run()
         prepare_mock.assert_called()
         load_mock.assert_called()
         run_mock.assert_called()
+        clean_mock.assert_called()
 
     def test_prepare(self):
         options_mock = mock.MagicMock(workspace='.')

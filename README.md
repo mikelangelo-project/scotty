@@ -1,45 +1,23 @@
 Scotty
 ======
 
-Run Legacy Experiment
----------------------
+Download and Install 
+--------------------
 
-    source ./samples/experiment
-    ./scotty.py legacy experiment -w /path/to/workspace
-
-Run Legacy Workload-Generator
------------------------------
-
-Checkout from zuul and run workload:
-
-    source ./samples/workload-generator
-    ./scotty.py legacy workload_generator -w /path/to/workspace
+Clone from repository and run pip install -r requirements.txt. Scotty run with **Python 2.7**. 
     
-Skip checkout and run existing workload from workspace:
+Add scotty to /usr/bin    
 
-    ./scotty.py legacy workload_generator -w /path/to/workspace -s
+    ln -s /path/to/scotty/scotty.py /usr/bin/scotty
 
-Run a Workload
---------------
+Perform a experiment
+--------------------
+    
+    cd /path/to/experiment
+    scotty experiment perform
 
-    ./scotty.py workload run -w samples/workload
-
-Run an Experiment
------------------
-
-    ./scotty.py experiment run -w samples/component/experiment/ -s
-
-
-Run the Tests
+Run the tests
 -------------
-
-    python -m unittest discover tests
-
-    python-coverage run --source=. -m unittest discover -s tests/
-    python-coverage report -m --omit=scotty/legacy/*,scotty/cmd/legacy.py
-
-Run the Tests with pytest
--------------------------
 
     pytest
     
@@ -51,10 +29,14 @@ Rebase changed master into your feature/<branch>
     git rebase origin/master
     git push
 
-Install Gitlab Runner 
---------------------
+Setup automatic experiment environment in gitlab
+----------------------------------------------------
+
+### Install Gitlab Runner
 
 https://docs.gitlab.com/runner/install/linux-repository.html
+
+Add repository source and pin
 
     curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.deb.sh | sudo bash
 
@@ -65,7 +47,11 @@ https://docs.gitlab.com/runner/install/linux-repository.html
     Pin-Priority: 1001
     EOF
 
+Install runner
+
     sudo apt-get install gitlab-ci-multi-runner
+
+Register and setup runner
 
     # User Token from the project and tag "scotty-agent"
     sudo gitlab-ci-multi-runner register
@@ -82,5 +68,7 @@ https://docs.gitlab.com/runner/install/linux-repository.html
     limit = 1
     [runners.cache]
     
+Restart and verify runner
+
     gitlab-runner restart
     gitlab-runner verify

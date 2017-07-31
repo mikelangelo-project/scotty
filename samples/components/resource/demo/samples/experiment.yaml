@@ -1,0 +1,14 @@
+description: This is a experiment with two demo resources
+tags:
+  - demo
+resources:
+  - name: demo_resource_1
+    generator: file:.
+    params:
+      user: user_1
+      password: secret
+  - name: demo_resource_2
+    generator: file:.
+    params:
+      user: user_2
+      password: secret
