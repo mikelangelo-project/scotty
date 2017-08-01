@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import argparse
+import unittest
 
 from scotty.cmd.base import CommandRegistry
+from scotty.cmd.base import CommandParser
 
 
 class CommandTest(object):
@@ -23,3 +25,10 @@ class CommandTest(object):
         cmd = command_builder.buildCommand(resource_options, command_class)
         self.assertIsInstance(cmd, self.command_class)
         cmd.execute()
+
+
+class CommandParserTest(unittest.TestCase):
+    def test_parser(self):
+        parser = CommandParser()
+        with self.assertRaises(NotImplementedError):
+            parser.add_arguments(None)
