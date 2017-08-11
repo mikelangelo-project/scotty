@@ -49,7 +49,7 @@ class Workload(Component):
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'workload_gen.py')
-   
+
     @property
     def params(self):
         return self.config['params']
@@ -72,7 +72,8 @@ class Experiment(Component):
             self.resources[component.name] = component
         else:
             raise ExperimentException(
-                'Component {} can not added to experiment'.format(component.type))
+                'Component {} cannot add to experiment'.format(
+                    component.type))
 
 
 class Resource(Component):
