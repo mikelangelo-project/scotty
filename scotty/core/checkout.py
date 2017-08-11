@@ -15,7 +15,7 @@ class CheckoutManager(object):
         source = component.config['generator'].split(':')
         source = dict(enumerate(source, 0))
         if component.issource('git'):
-            git_url = "{}:{}".format(source[1], source[2])
+            git_url = "{}:{}".format(source[0], source[1])
             git_ref = source.get(3, None)
             cls.checkout(git_url, component.workspace, git_ref)
         elif component.issource('file'):
@@ -71,6 +71,7 @@ class CheckoutManager(object):
     @classmethod
     def _init_submodules(cls, workspace, repo):
         if os.path.isfile('{path}/.gitmodules'.format(path=workspace.path)):
+            print 'foo'
             repo.git.submodules('init')
             repo.git.submodules('sync')
             repo.git.submodules('update', '--init')
