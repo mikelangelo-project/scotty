@@ -67,6 +67,6 @@ experiment.yaml section resources
     
 Implementation in the resource module
 
-    def run(context):
+    def deploy(context):
       resource = context.v1.resource
       greeting = resource.params['greeting']
