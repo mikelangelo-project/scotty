@@ -15,7 +15,7 @@ class CheckoutManager(object):
         source = component.config['generator'].split(':')
         source = dict(enumerate(source, 0))
         if component.issource('git'):
-            git_url = "{}:{}".format(source[0], source[1])
+            git_url = "{}:{}".format(source[1], source[2])
             git_ref = source.get(3, None)
             cls.checkout(git_url, component.workspace, git_ref)
         elif component.issource('file'):
