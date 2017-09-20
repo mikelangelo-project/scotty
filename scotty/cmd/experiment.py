@@ -3,6 +3,7 @@ import logging
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
 from scotty.workflows import ExperimentPerformWorkflow
+from scotty.workflows import ExperimentCleanWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,18 @@ class ExperimentParser(CommandParser):
             dest='action')
         performparser = subparsers.add_parser('perform')
         PerformParser().add_arguments(performparser)
+        cleanparser = subparsers.add_parser('clean')
+        CleanParser().add_arguments(cleanparser)
 
+
+class CleanParser(CommandParser):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-w', '--workspace',
+            help='Path to experiment workspace',
+            dest='workspace',
+            action='store',
+            default='./')
 
 class PerformParser(CommandParser):
     def add_arguments(self, parser):
@@ -46,4 +58,7 @@ class Command(object):
     def execute(self):
         if self.options.action == 'perform':
             workflow = ExperimentPerformWorkflow(self.options)
+            workflow.run()
+        elif self.options.action == 'clean':
+            workflow = ExperimentCleanWorkflow(self.options)
             workflow.run()

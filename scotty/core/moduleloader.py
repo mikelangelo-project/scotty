@@ -2,6 +2,7 @@ import logging
 import imp
 import os
 import sys
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,9 @@ class ModuleLoader(object):
     @classmethod
     def load_by_path(cls, path, name, parent_module_name):
         parent_module = cls.create_parent_module(parent_module_name)
+        uuid_hex = uuid.uuid4().hex[:8]
         name = name or 'anonymous_component'
-        name = "{}.{}".format(parent_module.__name__, name)
+        name = "{}.{}_{}".format(parent_module.__name__, uuid_hex, name)
         cls.add_syspath(path)
         module_ = imp.load_source(name, path)
         return module_
