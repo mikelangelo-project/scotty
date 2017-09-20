@@ -25,7 +25,7 @@ class Workspace(object):
         os.chdir(prev_cwd)
 
     @classmethod
-    def factory(cls, component, workspace_path):
+    def factory(cls, component, workspace_path, create_paths = False):
         if component.isinstance('Workload'):
             workspace = WorkloadWorkspace(workspace_path)
         elif component.isinstance('Resource'):
@@ -34,6 +34,8 @@ class Workspace(object):
             workspace = ExperimentWorkspace(workspace_path)
         else:
             raise ExperimentException('Component {} is not supported'.format(type(component)))
+        if create_paths:
+            workspace.create_paths()
         return workspace
 
 

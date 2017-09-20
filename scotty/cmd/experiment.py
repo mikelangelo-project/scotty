@@ -2,7 +2,7 @@ import logging
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
-from scotty.workflows import ExperimentPerformWorkflow
+from scotty.workflows import ExperimentWorkflow
 from scotty.workflows import ExperimentCleanWorkflow
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class Command(object):
 
     def execute(self):
         if self.options.action == 'perform':
-            workflow = ExperimentPerformWorkflow(self.options)
+            workflow = ExperimentWorkflow(self.options)
             workflow.run()
         elif self.options.action == 'clean':
             workflow = ExperimentCleanWorkflow(self.options)
