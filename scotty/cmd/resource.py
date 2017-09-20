@@ -15,9 +15,7 @@ class CommandAction(Enum):
 @CommandRegistry.parser
 class ResourceParser(CommandParser):
     def add_arguments(self, parser):
-        subparsers = parser.add_subparsers(
-            help='Action',
-            dest='action')
+        subparsers = parser.add_subparsers(help='Action', dest='action')
         initparser = subparsers.add_parser(CommandAction.init.name)
         InitParser().add_arguments(initparser)
 

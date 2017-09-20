@@ -13,6 +13,7 @@ from scotty.core.components import Workload
 from scotty.core.components import Resource
 from scotty.core.context import Context
 from scotty.core.exceptions import ResourceException
+from scotty.core.exceptions import WorkloadException
 from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,8 @@ class Workflow(object):
         self._clean()
 
     def _prepare(self):
-        pass
+        raise NotImplementedError(
+            'Workflow._prepare(self) must be implemented')
 
     def _load(self):
         pass
@@ -46,7 +48,8 @@ class Workflow(object):
 class ExperimentPerformWorkflow(Workflow):
     def _prepare(self):
         self.experiment = Experiment()
-        self.experiment.workspace = Workspace.factory(self.experiment, self._options.workspace)
+        self.experiment.workspace = Workspace.factory(self.experiment,
+                                                      self._options.workspace)
         self.experiment.workspace.create_paths()
 
     def _load(self):
@@ -62,12 +65,12 @@ class ExperimentPerformWorkflow(Workflow):
     def _load_components(self, component_configs, component_type):
         for component_config in component_configs:
             logger.info('Load component {}(type: {}, source: {})'.format(
-                component_config['name'],
-                component_type.__name__,
+                component_config['name'], component_type.__name__,
                 component_config['generator']))
             component = component_type()
             component.config = component_config
-            workspace_path = self.experiment.workspace.get_component_path(component)
+            workspace_path = self.experiment.workspace.get_component_path(
+                component)
             component.workspace = Workspace.factory(component, workspace_path)
             CheckoutManager.populate(component, self.experiment.workspace.path)
             component.module = ModuleLoader.load_by_component(component)
@@ -94,10 +97,10 @@ class ExperimentPerformWorkflow(Workflow):
             logger.info('Check resource ({})'.format(resource.name))
             for interface_ in ('endpoint', 'deploy', 'clean'):
                 try:
-                    getattr(resource.module, interface_) 
+                    getattr(resource.module, interface_)
                 except:
                     err_msg = 'Missing interface {} for resource {}'.format(
-                            interface_, resource.name)
+                        interface_, resource.name)
                     logger.error(err_msg)
                     raise ScottyException(err_msg)
         for workload in self.experiment.workloads.itervalues():
@@ -107,7 +110,7 @@ class ExperimentPerformWorkflow(Workflow):
                     getattr(workload.module, interface_)
                 except:
                     err_msg = 'Missing interface ({}) for workload ({})'.format(
-                            interface_, resource.name)
+                        interface_, workload.name)
                     logger.error(err_msg)
                     raise ScottyException(err_msg)
 
@@ -120,7 +123,8 @@ class ExperimentPerformWorkflow(Workflow):
                     resource.module.deploy(context)
                     resource.endpoint = resource.module.endpoint(context)
                 except:
-                    logger.exception('Error from customer resource ({})'.format(resource.name))
+                    logger.exception('Error from customer resource ({})'.
+                                     format(resource.name))
                     raise ResourceException()
 
     def _run_workloads(self):
@@ -131,7 +135,8 @@ class ExperimentPerformWorkflow(Workflow):
                 try:
                     workload.module.run(context)
                 except:
-                    logger.exception('Error from customer workload ({})'.format(workload.name))
+                    logger.exception('Error from customer workload ({})'.
+                                     format(workload.name))
                     raise WorkloadException()
 
     def _result_workloads(self):
@@ -142,13 +147,15 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _clean_resources(self):
         for resource in self.experiment.resources.itervalues():
-             logger.info('Clean resource ({})'.format(resource.name))
-             with self.experiment.workspace.cwd():
+            logger.info('Clean resource ({})'.format(resource.name))
+            with self.experiment.workspace.cwd():
                 context = Context(resource, self.experiment)
                 try:
                     resource.module.clean(context)
                 except:
-                    logger.exception('Error from customer resource ({})'.format(resource.name))
+                    logger.exception('Error from customer resource ({})'.
+                                     format(resource.name))
+                    raise ResourceException()
 
 
 class ExperimentCleanWorkflow(Workflow):

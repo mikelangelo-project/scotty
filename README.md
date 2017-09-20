@@ -21,14 +21,6 @@ Run the tests
 
     pytest
     
-Rebase changed master into your feature/<branch>
--------------
-
-    git checkout feature/<branch>
-    git fetch
-    git rebase origin/master
-    git push
-
 Setup automatic experiment environment in gitlab
 ----------------------------------------------------
 

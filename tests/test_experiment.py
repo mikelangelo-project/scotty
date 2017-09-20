@@ -49,6 +49,12 @@ class ExperimentTest(unittest.TestCase):
         self.assertEquals(experiment.workloads['test_name'], workload)
         self.assertEquals(len(experiment.workloads), 1)
 
+    def test_add_experiment(self):
+        parent_experiment = Experiment()
+        child_experiment = Experiment()
+        with self.assertRaises(ExperimentException):
+            parent_experiment.add_component(child_experiment)
+
 
 class ExperimentWorkflowTest(unittest.TestCase):
     def setUp(self):

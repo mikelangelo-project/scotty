@@ -3,6 +3,7 @@ import unittest
 import mock
 
 from scotty.config import ScottyConfig
+from scotty.core.exceptions import ScottyException
 
 
 class ScottyConfigTest(unittest.TestCase):
@@ -56,5 +57,5 @@ class ScottyConfigTest(unittest.TestCase):
     @mock.patch('os.path.isfile')
     def test_no_scotty_config_file(self, isfile_mock):
         isfile_mock.return_value = False
-        with self.assertRaises(Exception):
-            utils.Config()
+        with self.assertRaises(ScottyException):
+            ScottyConfig()
