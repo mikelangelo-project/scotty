@@ -1,5 +1,7 @@
 import logging
 
+from aenum import Enum
+
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
 from scotty.workflows import ResourceInitWorkflow
@@ -7,6 +9,8 @@ from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
 
+class CommandAction(Enum):
+    init = 'init'
 
 @CommandRegistry.parser
 class ResourceParser(CommandParser):
@@ -14,7 +18,7 @@ class ResourceParser(CommandParser):
         subparsers = parser.add_subparsers(
             help='Action',
             dest='action')
-        initparser = subparsers.add_parser('init')
+        initparser = subparsers.add_parser(CommandAction.init.name)
         InitParser().add_arguments(initparser)
 
 class InitParser(CommandParser):
@@ -33,7 +37,8 @@ class Command(object):
         self.options = options
 
     def execute(self):
-        if self.options.action == 'init':
+        commandAction = CommandAction(self.options.action)
+        if commandAction is CommandAction.init:
             try:
                 workflow = ResourceInitWorkflow(self.options)
                 workflow.run()
