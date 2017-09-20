@@ -187,7 +187,7 @@ class WorkloadInitWorkflow(Workflow):
         self._create_readme()
 
     def _create_workload_gen(self):
-        workload_gen_py_template = os.path.join(self.template_dir, 'workload_gen.py.template')
+        workload_gen_py_template = os.path.join(self.template_dir, 'workload_gen.template.py')
         shutil.copyfile(workload_gen_py_template, self.workload.module_path)
 
     def _create_samples(self):
@@ -195,12 +195,12 @@ class WorkloadInitWorkflow(Workflow):
         if not os.path.isdir(samples_dir):
             os.mkdir(samples_dir)
         experiment_yaml = os.path.join(samples_dir, 'experiment.yaml')
-        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.yaml.workload')
+        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.workload.yaml')
         shutil.copyfile(experiment_yaml_template, experiment_yaml)
          
     def _create_readme(self):
         readme_md = os.path.join(self.workload.workspace.path, 'README.md')
-        readme_md_template = os.path.join(self.template_dir, 'README.md.workload')
+        readme_md_template = os.path.join(self.template_dir, 'README.workload.md')
         shutil.copyfile(readme_md_template, readme_md)
 
 
@@ -230,7 +230,7 @@ class ResourceInitWorkflow(Workflow):
         self._create_readme()
 
     def _create_resource_gen(self):
-        resource_gen_py_template = os.path.join(self.template_dir, 'resource_gen.py.template')
+        resource_gen_py_template = os.path.join(self.template_dir, 'resource_gen.template.py')
         shutil.copyfile(resource_gen_py_template, self.resource.module_path)
 
     def _create_samples(self):
@@ -238,10 +238,10 @@ class ResourceInitWorkflow(Workflow):
         if not os.path.isdir(samples_dir):
             os.mkdir(samples_dir)
         experiment_yaml = os.path.join(samples_dir, 'experiment.yaml')
-        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.yaml.resource')
+        experiment_yaml_template = os.path.join(self.template_dir, 'experiment.resource.yaml')
         shutil.copyfile(experiment_yaml_template, experiment_yaml)
 
     def _create_readme(self):
         readme_md = os.path.join(self.resource.workspace.path, 'README.md')
-        readme_md_template = os.path.join(self.template_dir, 'README.md.resource')
+        readme_md_template = os.path.join(self.template_dir, 'README.resource.md')
         shutil.copyfile(readme_md_template, readme_md)
