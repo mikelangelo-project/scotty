@@ -15,7 +15,7 @@ Getting Started
 Implement the resource generator like a python module. Your code should implemented under a subdirectory.    
 Three interfaces must be implemented from resource_gen.py
 
-| Methode           | Description |
+| Method            | Description |
 | ----------------- | ----------- |
 | endpoint(context) | Is called from scotty until endpoint gives an result != nil <br> Check the state of your resource here and return nil if the workload has no endpoint yet otherwise return dict with the endpoint data |
 | deploy(context)   | Is called from scotty if the resource will be deployed. Please implement this methode as a non blocking methode and collect the state and endpoint in the endpoint methode |
