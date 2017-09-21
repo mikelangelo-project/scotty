@@ -39,6 +39,11 @@ class Component(object):
 
 
 class Workload(Component):
+    module_interfaces = [
+        'result',
+        'run',
+    ]
+
     def __init__(self):
         super(Workload, self).__init__()
         self.module = None
@@ -77,6 +82,11 @@ class Experiment(Component):
 
 
 class Resource(Component):
+    module_interfaces = [
+        'endpoint',
+        'deploy',
+        'clean',
+    ]
     def __init__(self):
         super(Resource, self).__init__()
         self.module = None
@@ -92,3 +102,15 @@ class Resource(Component):
     @property
     def module_path(self):
         return os.path.join(self.workspace.path, 'resource_gen.py')
+
+class ComponentValidator(object):
+    @classmethod
+    def validate_interfaces(cls, component):
+        for interface_ in component.module_interfaces:
+            try:
+                getattr(component.module, interface_)
+            except:
+                raise ScottyException('Missing interface {} for {} {}.'.format(
+                    interface_,
+                    component.type,
+                    component.name))

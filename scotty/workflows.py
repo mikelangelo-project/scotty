@@ -11,6 +11,7 @@ from scotty.core.workspace import Workspace
 from scotty.core.components import Experiment
 from scotty.core.components import Workload
 from scotty.core.components import Resource
+from scotty.core.components import ComponentValidator
 from scotty.core.context import Context
 from scotty.core.exceptions import ResourceException
 from scotty.core.exceptions import WorkloadException
@@ -78,14 +79,7 @@ class ExperimentWorkflow(Workflow):
             resource.workspace = Workspace.factory(resource, resource_path)
             CheckoutManager.populate(resource, self.experiment.workspace.path)
             resource.module = ModuleLoader.load_by_component(resource)
-            for interface_ in ('endpoint', 'deploy', 'clean'):
-                try:
-                    getattr(resource.module, interface_)
-                except:
-                    err_msg = 'Missing interface {} for resource {}'.format(interface_,
-                                                                            resource.name)
-                    logger.error(err_msg)
-                    raise ScottyException(err_msg)
+            ComponentValidator.validate_interfaces(resource)
             self.experiment.add_component(resource)
 
     def _prepare_workloads(self):
@@ -100,14 +94,7 @@ class ExperimentWorkflow(Workflow):
             workload.workspace = Workspace.factory(workload, workload_path)
             CheckoutManager.populate(workload, self.experiment.workspace.path)
             workload.module = ModuleLoader.load_by_component(workload)
-            for interface_ in ('run', 'result'):
-                try:
-                    getattr(workload.module, interface_)
-                except:
-                    err_msg = 'Missing interface ({}) for workload ({})'.format(interface_,
-                                                                                workload.name)
-                    logger.error(err_msg)
-                    raise ScottyException(err_msg)
+            ComponentValidator.validate_interfaces(workload)
             self.experiment.add_component(workload)
 
     def _run(self):
