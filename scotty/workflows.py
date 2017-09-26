@@ -16,6 +16,7 @@ from scotty.core.context import Context
 from scotty.core.exceptions import ResourceException
 from scotty.core.exceptions import WorkloadException
 from scotty.core.exceptions import ScottyException
+from scotty.core.report import ReportCollector
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ class ExperimentWorkflow(Workflow):
             experiment.workspace.config_path = self._options.config
         with open(experiment.workspace.config_path, 'r') as stream:
             experiment.config = yaml.load(stream)
+        self.report_collector = ReportCollector(experiment)
         resource_count = len(experiment.config.get('resources', []))
         workload_count = len(experiment.config.get('workloads', []))
         logger.info('Found {} resource(s) and {} workload(s)'.format(resource_count, workload_count))
@@ -119,6 +121,7 @@ class ExperimentWorkflow(Workflow):
 
     def _run_report_baseline(self):
         logger.info('Collect baseline metrics')
+        self.report_collector.collect_baseline()
 
     def _run_workloads(self):
         logger.info('Run workloads')
@@ -136,6 +139,7 @@ class ExperimentWorkflow(Workflow):
 
     def _run_report(self):
         logger.info('Collect result and metrics')
+        self.report_collector.collect()
 
     def _clean(self):
         self._clean_workloads()
@@ -150,6 +154,7 @@ class ExperimentWorkflow(Workflow):
 
     def _clean_experiment(self):
         logger.info('Clean experiment')
+        self.report_collector.write_report()
 
 
 class ExperimentPerformWorkflow(Workflow):
