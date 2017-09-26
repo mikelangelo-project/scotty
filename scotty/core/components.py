@@ -2,6 +2,8 @@ import logging
 import os
 import sys
 
+from aenum import Enum
+
 from scotty.core.context import ContextAccessible
 from scotty.core.exceptions import ExperimentException
 
@@ -38,6 +40,13 @@ class Component(object):
         return type_.lower()
 
 
+class WorkloadState(Enum):
+    PREPARE = 0
+    ACTIVE = 1
+    FINISHED = 2
+    DELETED = 3
+    ERROR = 4
+
 class Workload(Component):
     module_interfaces = [
         'result',
@@ -48,6 +57,7 @@ class Workload(Component):
         super(Workload, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.workload_gen'
+        self.state = WorkloadState.PREPARE
         self._setaccess('params')
         self._setaccess('resources')
 
@@ -81,6 +91,14 @@ class Experiment(Component):
                     component.type))
 
 
+class ResourceState(Enum):
+    PREPARE = 0
+    DEPLOYING = 1
+    ACTIVE = 2
+    DELETED = 3
+    ERROR = 4
+
+ 
 class Resource(Component):
     module_interfaces = [
         'endpoint',
@@ -91,6 +109,7 @@ class Resource(Component):
         super(Resource, self).__init__()
         self.module = None
         self.parent_module_name = 'scotty.resource_gen'
+        self.state = ResourceState.PREPARE
         self.endpoint = None
         self._setaccess('params')
         self._setaccess('endpoint')
