@@ -104,7 +104,7 @@ class ExperimentPerformWorkflow(Workflow):
     def _run(self):
         self._run_resources_deploy()
         self._run_resources_endpoint()
-        self._run_report_baseline()
+        self._run_report_static()
         self._run_workloads()
         self._run_workloads_report()
         self._run_report()
@@ -142,9 +142,9 @@ class ExperimentPerformWorkflow(Workflow):
             if not retry:
                 break
 
-    def _run_report_baseline(self):
-        logger.info('Collect baseline metrics')
-        self.report_collector.collect_baseline()
+    def _run_report_static(self):
+        logger.info('Collect static metrics')
+        self.report_collector.collect_static()
 
     def _run_workloads(self):
         logger.info('Run workloads')

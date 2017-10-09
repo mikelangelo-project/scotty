@@ -7,7 +7,7 @@ class ReportCollector(object):
     def __init__(self, experiment):
         self.experiment = experiment
 
-    def collect_baseline(self):
+    def collect_static(self):
         pass
 
     def collect(self):
