@@ -126,10 +126,15 @@ class ComponentValidator(object):
     @classmethod
     def validate_interfaces(cls, component):
         for interface_ in component.module_interfaces:
-            try:
-                getattr(component.module, interface_)
-            except:
-                raise ScottyException('Missing interface {} for {} {}.'.format(
-                    interface_,
-                    component.type,
-                    component.name))
+            cls.validate_interface(component, interface_)
+
+    @classmethod
+    def validate_interface(cls, component, interface_):
+        try:
+            getattr(component.module, interface_)
+        except:
+            err_msg = 'Missing interface {} for {} {}.'.format(
+                interface_,
+                component.type,
+                component.name)
+            raise ScottyException(err_msg)
