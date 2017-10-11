@@ -10,6 +10,14 @@ from scotty.core.exceptions import ExperimentException
 logger = logging.getLogger(__name__)
 
 
+class CommonComponentState(Enum):
+    PREPARE = 0
+    ACTIVE = 1
+    COMPLETED = 2
+    DELETED = 3
+    ERROR = 4
+
+
 class Component(object):
     def __init__(self):
         self.config = None
@@ -43,9 +51,10 @@ class Component(object):
 class WorkloadState(Enum):
     PREPARE = 0
     ACTIVE = 1
-    FINISHED = 2
+    COMPLETED = 2
     DELETED = 3
     ERROR = 4
+
 
 class Workload(Component):
     module_interfaces = [
@@ -93,8 +102,8 @@ class Experiment(Component):
 
 class ResourceState(Enum):
     PREPARE = 0
-    DEPLOYING = 1
-    ACTIVE = 2
+    ACTIVE = 1
+    COMPLETED = 2
     DELETED = 3
     ERROR = 4
 
