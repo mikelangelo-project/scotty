@@ -1,0 +1,32 @@
+description: |
+  "This is a example for an experiment definition in scotty
+  The sections are
+    - description
+    - tags
+    - environment
+    - resources
+    - workloads"
+tags:
+  - sample
+resources:
+  - name: demo_resource
+    generator: file:resource/demo
+workloads:
+  - name: demo_workload
+    generator: file:workload/demo
+    resources:
+      demo_res: demo_resource
+    params:
+      greeting: 'Hallo'
+  - name: demo_workload_2
+    generator: file:workload/demo
+    params:
+      greeting: "Hallo"
+    resources:
+      demo_res: demo_resource
+  - name: demo_workload_3
+    generator: file:workload/demo
+    params:
+      greeting: "Hallo"
+    resources:
+      demo_res: demo_resource
