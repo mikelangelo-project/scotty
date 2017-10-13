@@ -11,11 +11,9 @@ def endpoint(context):
     return endpoint
 
 def deploy(context):
-    name = context.v1.resource.name
-    print 'Hey there,'
-    print 'my name is {} '.format(name),
-    print 'and I\'m deploy a dummy resource with my config:'
-    print '{}'.format(context.v1.resource.config)
+    resource = context.v1.resource
+    logger.info('Hey there,')
+    logger.info('I\'m resource generator {}'.format(resource.name))
 
 def clean(context):
     pass
