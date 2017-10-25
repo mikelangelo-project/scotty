@@ -19,6 +19,7 @@ from scotty.core.exceptions import ResourceException
 from scotty.core.exceptions import WorkloadException
 from scotty.core.exceptions import ScottyException
 from scotty.core.report import ReportCollector
+from scotty.core.executor import WorkloadRunExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +107,6 @@ class ExperimentPerformWorkflow(Workflow):
         self._run_resources_endpoint()
         self._run_report_static()
         self._run_workloads()
-        self._run_workloads_report()
         self._run_report()
 
     def _run_resources_deploy(self):
@@ -116,7 +116,7 @@ class ExperimentPerformWorkflow(Workflow):
             with self.experiment.workspace.cwd():
                 context = Context(resource, self.experiment)
                 try:
-                    resource.state = ResourceState.DEPLOYING
+                    resource.state = ResourceState.ACTIVE
                     resource.module.deploy(context)
                 except:
                     resource.state = ResourceState.ERROR
@@ -128,13 +128,13 @@ class ExperimentPerformWorkflow(Workflow):
         while True:
             retry = False
             for resource in self.experiment.resources.itervalues():
-                if resource.state is ResourceState.DEPLOYING:
+                if resource.state is ResourceState.ACTIVE:
                     with self.experiment.workspace.cwd():
                         context = Context(resource, self.experiment)
                         try:
                             resource.endpoint = resource.module.endpoint(context)
                             if resource.endpoint is not None:
-                                resource.state = ResourceState.ACTIVE
+                                resource.state = ResourceState.COMPLETED
                             else:
                                 retry = True
                         except:
@@ -148,36 +148,9 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run_workloads(self):
         logger.info('Run workloads')
-        for workload in self.experiment.workloads.itervalues():
-            logger.info('Run workload {}'.format(workload.name))
-            with self.experiment.workspace.cwd():
-                context = Context(workload, self.experiment)
-                try:
-                    workload.state = WorkloadState.ACTIVE
-                    workload.module.run(context)
-                except:
-                    workload.state = WorkloadState.ERROR
-                    logger.exception('Error from customer workload ({})'.format(workload.name))
-                    raise WorkloadException()
-
-    def _run_workloads_report(self):
-        logger.info('Wait for workload results')
-        while True:
-            retry = False
-            for workload in self.experiment.workloads.itervalues():
-                if workload.state is WorkloadState.ACTIVE:
-                     with self.experiment.workspace.cwd():
-                         context = Context(workload, self.experiment)
-                         try:
-                             workload.result = workload.module.result(context)
-                             if workload.result is True:
-                                 workload.state = WorkloadState.FINISHED
-                             else:
-                                 retry = True
-                         except:
-                             workload.state = WorkloadState.ERROR
-            if not retry:
-                break;
+        workload_run_executor = WorkloadRunExecutor()
+        workload_run_executor.submit_workloads(self.experiment.workloads, self.experiment)
+        workload_run_executor.collect_results()
 
     def _run_report(self):
         logger.info('Collect result and metrics')
