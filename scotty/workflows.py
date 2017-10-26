@@ -20,6 +20,7 @@ from scotty.core.exceptions import WorkloadException
 from scotty.core.exceptions import ScottyException
 from scotty.core.report import ReportCollector
 from scotty.core.executor import WorkloadRunExecutor
+from scotty.core.executor import ResourceDeployExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -103,44 +104,16 @@ class ExperimentPerformWorkflow(Workflow):
             self.experiment.add_component(workload)
 
     def _run(self):
-        self._run_resources_deploy()
-        self._run_resources_endpoint()
+        self._run_resources()
         self._run_report_static()
         self._run_workloads()
         self._run_report()
 
-    def _run_resources_deploy(self):
+    def _run_resources(self):
         logger.info('Deploy resources')
-        for resource in self.experiment.resources.itervalues():
-            logger.info('Deploy resource {}'.format(resource.name))
-            with self.experiment.workspace.cwd():
-                context = Context(resource, self.experiment)
-                try:
-                    resource.state = ResourceState.ACTIVE
-                    resource.module.deploy(context)
-                except:
-                    resource.state = ResourceState.ERROR
-                    logger.exception('Error from customer resource ({})'.format(resource.name))
-                    raise ResourceException()
-
-    def _run_resources_endpoint(self):
-        logger.info('Wait for resource endpoints')
-        while True:
-            retry = False
-            for resource in self.experiment.resources.itervalues():
-                if resource.state is ResourceState.ACTIVE:
-                    with self.experiment.workspace.cwd():
-                        context = Context(resource, self.experiment)
-                        try:
-                            resource.endpoint = resource.module.endpoint(context)
-                            if resource.endpoint is not None:
-                                resource.state = ResourceState.COMPLETED
-                            else:
-                                retry = True
-                        except:
-                            resource.state = ResourceState.ERROR
-            if not retry:
-                break
+        resource_deploy_executor = ResourceDeployExecutor()
+        resource_deploy_executor.submit_resources(self.experiment.resources, self.experiment)
+        resource_deploy_executor.collect_endpoints()
 
     def _run_report_static(self):
         logger.info('Collect static metrics')

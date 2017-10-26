@@ -27,7 +27,8 @@ class ComponentExecutor(ThreadPoolExecutor):
         with experiment.workspace.cwd():
             context = Context(component, experiment)
             function_ = self._get_function(component.module, interface_)
-            self._exec_function(component, function_, context)
+            result = self._exec_function(component, function_, context)
+            return result
 
     def _get_function(self, module_, interface_):
         function_ = getattr(module_, interface_)
@@ -64,4 +65,9 @@ class ResourceDeployExecutor(ComponentExecutor):
     def submit_resources(self, resources, experiment):
         for resource in resources.itervalues():
             logger.info('Submit resource {}.deploy(context)'.format(resource.name))
-           
+            self.submit(experiment, resource, 'deploy')
+
+    def collect_endpoints(self):
+        for future in as_completed(self._future_to_component):
+            resource = self._future_to_component[future]
+            resource.endpoint = future.result() 
