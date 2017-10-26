@@ -4,10 +4,6 @@ from scotty import utils
 
 logger = logging.getLogger(__name__)
 
-
-def result(context):
-    pass
-
 def run(context):
     workload = context.v1.workload
     experiment_helper = utils.ExperimentHelper(context)
@@ -15,6 +11,8 @@ def run(context):
     logger.info('{}'.format(workload.params['greeting']))
     logger.info('I\'m workload generator {}'.format(workload.name))
     logger.info('Resource endpoint: {}'.format(demo_resource.endpoint))
+    result = 'result'
+    return result
 
 def clean(context):
     pass
