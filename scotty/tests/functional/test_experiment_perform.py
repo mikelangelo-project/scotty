@@ -8,8 +8,11 @@ from scotty import cli
 
 class PerformExperimentTest(unittest.TestCase):
     cli_cmd = 'scotty experiment perform'
+    test_script_name = os.path.basename(__file__)
+    test_script_name = os.path.splitext(test_script_name)[0]
     experiment_samples_path = 'samples/components/experiment/single_workload'
-    experiment_tmp_path = os.path.join('tmp', experiment_samples_path)
+    experiment_tmp_path_root = os.path.join('tmp', test_script_name)
+    experiment_tmp_path = os.path.join(experiment_tmp_path_root, experiment_samples_path)
 
     def setUp(self):
         if os.path.isdir(self.experiment_tmp_path):
@@ -30,7 +33,7 @@ class PerformExperimentTest(unittest.TestCase):
             'components/resources/demo_resource/resource_gen.py')
 
     def tearDown(self):
-        shutil.rmtree(self.experiment_tmp_path)
+        shutil.rmtree(self.experiment_tmp_path_root)
 
     def test_perform_experiment(self):
         self.run_cmd()
