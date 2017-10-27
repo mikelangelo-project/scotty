@@ -39,17 +39,19 @@ class ComponentExecutorTest(unittest.TestCase):
         
     @mock.patch('scotty.core.components.Component')
     @mock.patch('scotty.core.context.Context')
-    @mock.patch('scotty.core.executor.ComponentExecutor._handle_function_exception')
-    def test__exec_function_exception(self, _handle_function_exception_mock, context_mock, component_mock):
+    @mock.patch('scotty.core.executor.ComponentExecutor._log_component_exception')
+    def test__exec_function_exception(self, _log_component_exception_mock, context_mock, component_mock):
         function__mock = mock.Mock(side_effect=Exception())
         component_executor = ComponentExecutor()
         component_executor._exec_function(component_mock, function__mock, context_mock)
-        _handle_function_exception_mock.assert_called()
+        _log_component_exception_mock.assert_called()
 
+    @mock.patch('scotty.core.executor.logger.exception')
     @mock.patch('scotty.core.components.Component')
-    def test__handle_function_exception(self, component_mock):
+    def test__log_component_exception(self, component_mock, logger_exception_mock):
         component_executor = ComponentExecutor()
-        self.assertRaises(ScottyException, component_executor._handle_function_exception, component_mock)
+        component_executor._log_component_exception(component_mock)
+        logger_exception_mock.assert_called()
 
 class WorkloadExecutorTest(unittest.TestCase):
     @mock.patch('scotty.core.executor.ComponentExecutor.submit')

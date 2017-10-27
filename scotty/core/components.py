@@ -1,12 +1,16 @@
 import logging
 import os
 import sys
+import yaml
 
 from aenum import Enum
 
+from scotty.core.checkout import CheckoutManager
+from scotty.core.moduleloader import ModuleLoader
 from scotty.core.context import ContextAccessible
 from scotty.core.exceptions import ExperimentException
 from scotty.core.exceptions import ScottyException
+from scotty.core.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -146,3 +150,55 @@ class ComponentValidator(object):
                 component.type,
                 component.name)
             raise ScottyException(err_msg)
+
+class ComponentFactory(object):
+    @classmethod
+    def _get_component_workspace(cls, experiment, component):
+        workspace_path = experiment.workspace.get_component_path(component)
+        workspace = Workspace.factory(component, workspace_path)
+        return workspace
+
+    @classmethod
+    def _get_component_module(cls, experiment, component):
+        CheckoutManager.populate(component, experiment.workspace.path)
+        module_ =  ModuleLoader.load_by_component(component)
+        return module_
+
+class ExperimentFactory(ComponentFactory):
+    @classmethod
+    def build(cls, options):
+        experiment = Experiment()
+        experiment.workspace = Workspace.factory(experiment, options.workspace, True)
+        experiment.workspace.config_path = cls._get_experiment_config_path(experiment, options)
+        experiment.config = cls._get_experiment_config(experiment)
+        return experiment
+
+    @classmethod
+    def _get_experiment_config_path(cls, experiment, options):
+        config_path = options.config or experiment.workspace.config_path
+        return config_path
+
+    @classmethod
+    def _get_experiment_config(cls, experiment):
+         with open(experiment.workspace.config_path, 'r') as stream:
+             config = yaml.load(stream)
+         return config
+
+
+class ResourceFactory(ComponentFactory):
+    @classmethod
+    def build(cls, resource_config, experiment):
+        resource = Resource()
+        resource.config = resource_config
+        resource.workspace = cls._get_component_workspace(experiment, resource)
+        resource.module = cls._get_component_module(experiment, resource)
+        return resource
+
+class WorkloadFactory(ComponentFactory):
+    @classmethod
+    def build(cls, workload_config, experiment):
+        workload = Workload()
+        workload.config = workload_config
+        workload.workspace = cls._get_component_workspace(experiment, workload)
+        workload.module = cls._get_component_module(experiment, workload)
+        return workload
