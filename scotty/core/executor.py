@@ -61,7 +61,8 @@ class ComponentExecutor(ThreadPoolExecutor):
 
 
 class WorkloadRunExecutor(ComponentExecutor):
-    def submit_workloads(self, workloads, experiment):
+    def submit_workloads(self, experiment):
+        workloads = experiment.components['workload']
         for workload in workloads.itervalues():
             logger.info('Submit workload {}.run(context)'.format(workload.name))
             self.submit(experiment, workload, 'run')
@@ -73,14 +74,16 @@ class WorkloadRunExecutor(ComponentExecutor):
 
 
 class WorkloadCleanExecutor(ComponentExecutor):
-    def submit_workloads(self, workloads, experiment):
+    def submit_workloads(self, experiment):
+        workloads = experiment.components['workload']
         for workload in workloads.itervalues():
             logger.info('Submit workload {}.clean(context)'.format(workload.name))
             self.submit(experiment, workload, 'clean')
 
 
 class ResourceDeployExecutor(ComponentExecutor):
-    def submit_resources(self, resources, experiment):
+    def submit_resources(self, experiment):
+        resources = experiment.components['resource']
         for resource in resources.itervalues():
             logger.info('Submit resource {}.deploy(context)'.format(resource.name))
             self.submit(experiment, resource, 'deploy')
@@ -92,7 +95,26 @@ class ResourceDeployExecutor(ComponentExecutor):
 
 
 class ResourceCleanExecutor(ComponentExecutor):
-    def submit_resources(self, resources, experiment):
+    def submit_resources(self, experiment):
+        resources = experiment.components['resource']
         for resource in resources.itervalues():
             logger.info('Submit resource {}.clean(context)'.format(resource.name))
             self.submit(experiment, resource, 'clean')
+
+
+class SystemCollectorCollectExecutor(ComponentExecutor):
+    def submit_systemcollectors(self, experiment):
+        systemcollectors = experiment.components['systemcollector']
+        for systemcollector in systemcollectors.itervalues():
+            msg = 'Submit systemcollector {}.collect(context)'
+            logger.info(msg.format(systemcollector.name))
+            self.submit(experiment, systemcollector, 'collect')
+
+
+class ResultStoreSubmitExecutor(ComponentExecutor):
+    def submit_resultstores(self, experiment):
+        resultstores = experiment.components['resultstore']
+        for resultstore in resultstores.itervalues():
+            msg = 'Submit resultstore {}.submit(context)'
+            logger.info(msg.format(resultstore.name))
+            self.submit(experiment, resultstore, 'submit')

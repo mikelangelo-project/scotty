@@ -21,7 +21,7 @@ class ExperimentHelper(object):
             yield f
 
     def get_resource(self, resource_name):
-        resource = self.__experiment.resources.get(resource_name, None)
+        resource = self.__experiment.components['resource'].get(resource_name, None)
         if not resource:
             raise ScottyException(
                 'Can not find resource ({})'.format(resource_name))
