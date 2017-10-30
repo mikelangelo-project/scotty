@@ -206,7 +206,10 @@ class ExperimentFactory(ComponentFactory):
 
     @classmethod
     def _get_experiment_config_path(cls, experiment, options):
-        config_path = options.config or experiment.workspace.config_path
+        config = ''
+        if hasattr(options, 'config'):
+            config = options.config
+        config_path = config or experiment.workspace.config_path
         return config_path
 
     @classmethod

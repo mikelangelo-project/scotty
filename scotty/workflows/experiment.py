@@ -1,5 +1,7 @@
 import logging
 
+import shutil
+
 from scotty.workflows.base import Workflow
 from scotty.core.components import ExperimentFactory
 from scotty.core.components import ResourceFactory
@@ -121,4 +123,17 @@ class ExperimentPerformWorkflow(Workflow):
         resources_clean_executor.wait()
 
     def _clean_experiment(self):
+        pass
+
+
+class ExperimentCleanWorkflow(Workflow):
+    def _prepare(self):
+        self.experiment = ExperimentFactory.build(self._options)
+
+    def _run(self):
+        msg = ('Delete scotty path ({})')
+        logger.info(msg.format(self.experiment.workspace.scotty_path))
+        shutil.rmtree(self.experiment.workspace.scotty_path)
+    
+    def _clean(self):
         pass
