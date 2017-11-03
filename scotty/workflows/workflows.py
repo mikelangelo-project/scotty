@@ -64,7 +64,7 @@ class ExperimentCleanWorkflow(Workflow):
 class WorkloadInitWorkflow(Workflow):
     def _prepare(self):
         self.template_dir = os.path.dirname(os.path.realpath(__file__))
-        self.template_dir = os.path.join(self.template_dir, '../templates')
+        self.template_dir = os.path.join(self.template_dir, '../../templates')
         self.workload = Workload()
         self.workload.workspace = Workspace.factory(self.workload, self._options.directory)
         self._check_existing_workload()
@@ -107,7 +107,7 @@ class WorkloadInitWorkflow(Workflow):
 class ResourceInitWorkflow(Workflow):
     def _prepare(self):
         self.template_dir = os.path.dirname(os.path.realpath(__file__))
-        self.template_dir = os.path.join(self.template_dir, '../templates')
+        self.template_dir = os.path.join(self.template_dir, '../../templates')
         self.resource = Resource()
         self.resource.workspace = Workspace.factory(self.resource, self._options.directory)
         self._check_existing_resource()
