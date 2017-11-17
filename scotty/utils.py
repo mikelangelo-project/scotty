@@ -33,3 +33,6 @@ class ExperimentHelper(object):
     def get_workloads(self):
         workloads = self.__experiment.components['workload']
         return workloads
+
+    def get_experiment_starttime(self):
+        return self.__experiment.starttime

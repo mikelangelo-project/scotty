@@ -1,5 +1,5 @@
 import logging
-
+from datetime import datetime
 import shutil
 
 from scotty.workflows.base import Workflow
@@ -26,6 +26,7 @@ class ExperimentPerformWorkflow(Workflow):
     def _prepare_experiment(self):
         logger.info('Prepare experiment')
         self.experiment = ExperimentFactory.build(self._options)
+        self.experiment.starttime = datetime.now()
 
     def _prepare_resources(self):
         logger.info('Prepare resources')
