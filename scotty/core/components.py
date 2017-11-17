@@ -28,8 +28,12 @@ class Component(object):
     def __init__(self):
         self.config = None
         self.workspace = None
+        self.starttime = None
+        self.endtime = None
         self._setaccess('config')
         self._setaccess('name')
+        self._setaccess('starttime')
+        self._setaccess('endtime')
 
     def _setaccess(self, parameter):
         ContextAccessible(self.__class__.__name__).setaccess(parameter)
