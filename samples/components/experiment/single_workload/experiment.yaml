@@ -24,3 +24,5 @@ workloads:
       demo_res: demo_resource
     params:
       greeting: 'Hallo(1)'
+      sleep: 1
+      iteration: 2

@@ -20,15 +20,21 @@ workloads:
       demo_res: demo_resource
     params:
       greeting: 'Hallo'
+      sleep: 2
+      iterations: 5
   - name: demo_workload_2
     generator: file:workload/demo
     params:
       greeting: "Hallo"
+      sleep: 1
+      iterations: 20
     resources:
       demo_res: demo_resource
   - name: demo_workload_3
     generator: file:workload/demo
     params:
       greeting: "Hallo"
+      sleep: 3
+      iterations: 10
     resources:
       demo_res: demo_resource

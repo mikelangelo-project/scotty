@@ -110,6 +110,11 @@ class SystemCollectorCollectExecutor(ComponentExecutor):
             logger.info(msg.format(systemcollector.name))
             self.submit(experiment, systemcollector, 'collect')
 
+    def collect_results(self):
+        for future in as_completed(self._future_to_component):
+            systemcollector = self._future_to_component[future]
+            systemcollector.result = future.result()
+
 
 class ResultStoreSubmitExecutor(ComponentExecutor):
     def submit_resultstores(self, experiment):
