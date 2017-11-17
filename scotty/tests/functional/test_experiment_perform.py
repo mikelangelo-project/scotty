@@ -25,12 +25,12 @@ class PerformExperimentTest(unittest.TestCase):
     def setUpWorkloadModulePath(self):
         self.workload_module_path = os.path.join(
             self.experiment_scotty_path,
-            'components/workloads/demo_workload/workload_gen.py')
+            'components/workload/demo_workload/workload_gen.py')
 
     def setUpResourceModulePath(self):
         self.resource_module_path = os.path.join(
             self.experiment_scotty_path,
-            'components/resources/demo_resource/resource_gen.py')
+            'components/resource/demo_resource/resource_gen.py')
 
     def tearDown(self):
         shutil.rmtree(self.experiment_tmp_path_root)

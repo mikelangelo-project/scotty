@@ -4,18 +4,16 @@ from scotty import utils
 
 logger = logging.getLogger(__name__)
 
-def endpoint(context):
+def deploy(context):
+    resource = context.v1.resource
+    logger.info('Hey there,')
+    logger.info('I\'m resource generator {}'.format(resource.name))
     endpoint = {
         'url': 'https://demo.resource',
         'user': 'scotty',
         'password': '********'
     }
     return endpoint
-
-def deploy(context):
-    resource = context.v1.resource
-    logger.info('Hey there,')
-    logger.info('I\'m resource generator {}'.format(resource.name))
 
 def clean(context):
     pass

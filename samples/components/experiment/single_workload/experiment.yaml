@@ -8,6 +8,12 @@ description: |
     - workloads"
 tags:
   - sample
+systemcollectors: 
+  - name: demo_systemcollector 
+    generator: file:systemcollector/demo
+resultstores: 
+  - name: demo_resultstore
+    generator: file:resultstore/demo
 resources:
   - name: demo_resource
     generator: file:resource/demo

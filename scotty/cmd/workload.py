@@ -3,7 +3,7 @@ from aenum import Enum
 
 from scotty.cmd.base import CommandParser
 from scotty.cmd.base import CommandRegistry
-from scotty.workflows import WorkloadInitWorkflow
+from scotty.workflows.workflows import WorkloadInitWorkflow
 from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
