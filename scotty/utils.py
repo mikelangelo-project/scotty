@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ExperimentHelper(object):
     def __init__(self, context):
+        # TODO validate context - is from scotty and not a fake from customer component
         self.context = context
         self.__experiment = context.v1._ContextV1__experiment
 
@@ -26,3 +27,9 @@ class ExperimentHelper(object):
             raise ScottyException(
                 'Can not find resource ({})'.format(resource_name))
         return resource
+
+    # restrict function to a list of context types (component list)
+    # @restrict_to(component, component2, ...)
+    def get_workloads(self):
+        workloads = self.__experiment.components['workload']
+        return workloads

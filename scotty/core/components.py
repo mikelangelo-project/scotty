@@ -72,8 +72,10 @@ class Workload(Component):
         self.module = None
         self.parent_module_name = 'scotty.workload'
         self.state = WorkloadState.PREPARE
+        self.result = None
         self._setaccess('params')
         self._setaccess('resources')
+        self._setaccess('result')
 
     @property
     def module_path(self):
@@ -143,6 +145,8 @@ class SystemCollector(Component):
         self.module = None
         self.parent_module_name = 'scotty.systemcollector'
         self.state = CommonComponentState.PREPARE
+        self.result = None
+        self._setaccess('result')
         
     @property
     def module_path(self):
