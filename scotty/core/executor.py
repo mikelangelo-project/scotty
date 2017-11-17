@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import wait as futures_wait
@@ -42,7 +43,9 @@ class ComponentExecutor(ThreadPoolExecutor):
     def _exec_function(self, component, function_, context):
         try:
             component.state = CommonComponentState.ACTIVE
+            component.starttime = datetime.now()
             result = function_(context)
+            component.endtime = datetime.now()
             component.state = CommonComponentState.COMPLETED
             return result
         except:

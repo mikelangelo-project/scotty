@@ -25,4 +25,4 @@ workloads:
     params:
       greeting: 'Hallo(1)'
       sleep: 1
-      iteration: 2
+      iterations: 2
