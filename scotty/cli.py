@@ -30,8 +30,8 @@ class Cli(object):
         cmd.execute()
 
 
-def run():
+def run(args=sys.argv):
     cli = Cli()
-    cli.parse_command(sys.argv[1:2])
-    cli.parse_command_options(sys.argv[2:])
+    cli.parse_command(args[1:2])
+    cli.parse_command_options(args[2:])
     cli.execute_command()

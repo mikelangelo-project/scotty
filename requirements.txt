@@ -3,6 +3,7 @@
 pyyaml
 GitPython
 aenum
+futures
 
 # Test requirements
 mock>=2.0.0

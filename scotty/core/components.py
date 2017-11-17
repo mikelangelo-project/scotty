@@ -6,8 +6,17 @@ from aenum import Enum
 
 from scotty.core.context import ContextAccessible
 from scotty.core.exceptions import ExperimentException
+from scotty.core.exceptions import ScottyException
 
 logger = logging.getLogger(__name__)
+
+
+class CommonComponentState(Enum):
+    PREPARE = 0
+    ACTIVE = 1
+    COMPLETED = 2
+    DELETED = 3
+    ERROR = 4
 
 
 class Component(object):
@@ -43,13 +52,13 @@ class Component(object):
 class WorkloadState(Enum):
     PREPARE = 0
     ACTIVE = 1
-    FINISHED = 2
+    COMPLETED = 2
     DELETED = 3
     ERROR = 4
 
+
 class Workload(Component):
     module_interfaces = [
-        'result',
         'run',
     ]
 
@@ -93,15 +102,14 @@ class Experiment(Component):
 
 class ResourceState(Enum):
     PREPARE = 0
-    DEPLOYING = 1
-    ACTIVE = 2
+    ACTIVE = 1
+    COMPLETED = 2
     DELETED = 3
     ERROR = 4
 
  
 class Resource(Component):
     module_interfaces = [
-        'endpoint',
         'deploy',
         'clean',
     ]

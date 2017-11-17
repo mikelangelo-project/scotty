@@ -8,5 +8,5 @@
 
 .cache/
 
-# samples
-samples/components/experiment/.scotty/
+# tests
+tmp
