@@ -205,7 +205,7 @@ class ComponentFactory(object):
         return module_
 
 class ExperimentFactory(ComponentFactory):
-    yaml_pattern_env = re.compile( r'^\<%= ENV\[\'(.*)\'\] %\>(.*)$' )
+    yaml_pattern_env = re.compile(r'\<%=\s*ENV\[\'([^\]\s]+)\'\]\s*%\>')
     @classmethod
     def build(cls, options):
         experiment = Experiment()
@@ -233,8 +233,8 @@ class ExperimentFactory(ComponentFactory):
     @classmethod
     def _scotty_yaml_env_constructor(cls, loader, node):
         value = loader.construct_scalar(node)
-        env_var, remaining_path = cls.yaml_pattern_env.match(value).groups()
-        return os.environ.get(env_var, '') + remaining_path
+        env_var = cls.yaml_pattern_env.match(value).groups()[0]
+        return os.environ.get(env_var, '')
 
 class ResourceFactory(ComponentFactory):
     @classmethod
