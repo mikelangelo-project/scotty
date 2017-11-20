@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from concurrent.futures import wait as futures_wait
+from concurrent import futures
+
+#from concurrent.futures import ThreadPoolExecutor, as_completed
+#from concurrent.futures import wait as futures_wait
 
 from scotty.core.components import CommonComponentState
 from scotty.core.exceptions import ScottyException
@@ -11,7 +13,7 @@ from scotty.core.context import Context
 logger = logging.getLogger(__name__)
 
 
-class ComponentExecutor(ThreadPoolExecutor):
+class ComponentExecutor(futures.ThreadPoolExecutor):
     def __init__(self):
         super(ComponentExecutor, self).__init__(4)
         self._future_to_component = {}
@@ -57,7 +59,7 @@ class ComponentExecutor(ThreadPoolExecutor):
         logger.exception(msg)
 
     def wait(self):
-        for future in as_completed(self._future_to_component):
+        for future in futures.as_completed(self._future_to_component):
             exception = future.exception()
             if exception:
                 logger.error(exception)
@@ -71,9 +73,14 @@ class WorkloadRunExecutor(ComponentExecutor):
             self.submit(experiment, workload, 'run')
 
     def collect_results(self):
-        for future in as_completed(self._future_to_component):
-            workload = self._future_to_component[future]
-            workload.result = future.result()
+        try:
+            for future in futures.as_completed(self._future_to_component):
+                workload = self._future_to_component[future]
+                workload.result = future.result()
+        except KeyboardInterrupt:
+            self._threads.clear()
+            futures.thread._threads_queues.clear()
+            raise
 
 
 class WorkloadCleanExecutor(ComponentExecutor):
@@ -92,7 +99,7 @@ class ResourceDeployExecutor(ComponentExecutor):
             self.submit(experiment, resource, 'deploy')
 
     def collect_endpoints(self):
-        for future in as_completed(self._future_to_component):
+        for future in futures.as_completed(self._future_to_component):
             resource = self._future_to_component[future]
             resource.endpoint = future.result() 
 
@@ -114,7 +121,7 @@ class SystemCollectorCollectExecutor(ComponentExecutor):
             self.submit(experiment, systemcollector, 'collect')
 
     def collect_results(self):
-        for future in as_completed(self._future_to_component):
+        for future in futures.as_completed(self._future_to_component):
             systemcollector = self._future_to_component[future]
             systemcollector.result = future.result()
 
