@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import yaml
+import re
 from collections import defaultdict
 
 from aenum import Enum
@@ -204,6 +205,7 @@ class ComponentFactory(object):
         return module_
 
 class ExperimentFactory(ComponentFactory):
+    yaml_pattern_env = re.compile(r'\<%=\s*ENV\[\'([^\]\s]+)\'\]\s*%\>')
     @classmethod
     def build(cls, options):
         experiment = Experiment()
@@ -223,9 +225,16 @@ class ExperimentFactory(ComponentFactory):
     @classmethod
     def _get_experiment_config(cls, experiment):
          with open(experiment.workspace.config_path, 'r') as stream:
+             yaml.add_implicit_resolver ( "!scotty_yaml_env", cls.yaml_pattern_env )
+             yaml.add_constructor('!scotty_yaml_env', cls._scotty_yaml_env_constructor)
              config = yaml.load(stream)
          return config
 
+    @classmethod
+    def _scotty_yaml_env_constructor(cls, loader, node):
+        value = loader.construct_scalar(node)
+        env_var = cls.yaml_pattern_env.match(value).groups()[0]
+        return os.environ.get(env_var, '')
 
 class ResourceFactory(ComponentFactory):
     @classmethod

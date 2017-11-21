@@ -23,6 +23,6 @@ workloads:
     resources:
       demo_res: demo_resource
     params:
-      greeting: 'Hallo(1)'
+      greeting: <%= ENV['WL_NAME'] %>
       sleep: 1
       iterations: 2
