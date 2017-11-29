@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 import shutil
+import sys
 
 from scotty.workflows.base import Workflow
 from scotty.core.components import ExperimentFactory
@@ -124,8 +125,8 @@ class ExperimentPerformWorkflow(Workflow):
         resources_clean_executor.wait()
 
     def _clean_experiment(self):
-        pass
-
+        if self.experiment.has_errors():
+            sys.exit(1)
 
 class ExperimentCleanWorkflow(Workflow):
     def _prepare(self):

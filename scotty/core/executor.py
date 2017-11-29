@@ -32,6 +32,8 @@ class ComponentExecutor(futures.ThreadPoolExecutor):
             context = Context(component, experiment)
             function_ = self._get_function(component, interface_)
             result = self._exec_function(component, function_, context)
+            if component.state == CommonComponentState.ERROR:
+                experiment.state = CommonComponentState.ERROR
             return result
 
     def _get_function(self, component, interface_):
