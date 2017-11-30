@@ -99,7 +99,8 @@ class Experiment(Component):
     def __init__(self):
         super(Experiment, self).__init__()
         self.components = defaultdict(dict)
-
+        self.state = CommonComponentState.PREPARE
+        
     def add_component(self, component):
         if component.type in ExperimentWorkspace.supported_components:
             self.components[component.type][component.name] = component
@@ -107,6 +108,9 @@ class Experiment(Component):
             raise ExperimentException(
                 'Component {} cannot add to experiment'.format(
                     component.type))
+
+    def has_errors(self):
+        return self.state == CommonComponentState.ERROR
 
 
 class ResourceState(Enum):
