@@ -31,6 +31,7 @@ class Component(object):
         self.workspace = None
         self.starttime = None
         self.endtime = None
+        self._generator = None
         self._setaccess('config')
         self._setaccess('name')
         self._setaccess('starttime')
@@ -44,10 +45,30 @@ class Component(object):
         return self.config['name']
 
     def issource(self, type_):
-        source = self.config['generator'].split(':')
-        source_type = source[0].upper()
+        source_type = self.get_source_type()
         same_type = source_type == type_.upper()
         return same_type
+
+    def _parse_generator(self):
+        pattern_source_str = re.compile(r'(git|file):([^\[]+)(?:\[([^\]]+)\])?$')
+        source_str = self.config['generator']
+        groups = pattern_source_str.match(source_str).groups()
+        self._generator = {
+            "type":groups[0],
+            "location":groups[1],
+            "reference":groups[2]
+        }
+
+    @property
+    def generator(self):
+        if not self._generator:
+            self._parse_generator()
+        return self._generator
+
+    def get_source_type(self):
+        source = self.config['generator'].split(':')
+        source_type = source[0].upper()
+        return source_type
 
     def isinstance(self, type_str):
         class_ = getattr(sys.modules[__name__], type_str)

@@ -12,14 +12,11 @@ logger = logging.getLogger(__name__)
 class CheckoutManager(object):
     @classmethod
     def populate(cls, component, base_path):
-        source = component.config['generator'].split(':')
-        source = dict(enumerate(source, 0))
-        if component.issource('git'):
-            git_url = "{}:{}".format(source[1], source[2])
-            git_ref = source.get(3, None)
-            cls.checkout(git_url, component.workspace, git_ref)
-        elif component.issource('file'):
-            cls.copy(component, source[1], base_path)
+        generator = component.generator
+        if generator['type'] == "git":
+            cls.checkout(generator['location'], component.workspace, generator['referenc'])
+        elif generator['type'] == "file":
+            cls.copy(component, generator['location'], base_path)
         else:
             raise ScottyException('Unsupported source type, Use "git" or "file"')
 
