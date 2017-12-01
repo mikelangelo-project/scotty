@@ -1,9 +1,10 @@
 import unittest
 import mock
 
+from scotty.core.checkout import CheckoutManager
 from scotty.core.components import Component
 
-class ComponentTest(unittest.TestCase):
+class CheckoutManagerTest(unittest.TestCase):
     def test_generator_location(self):
         git_url = "git@gitlab.gwdg.de:repository.py.git"
         generator = "git:{}[master]".format(git_url)
