@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 import re
+import uuid
 from collections import defaultdict
 
 from aenum import Enum
@@ -27,11 +28,13 @@ class CommonComponentState(Enum):
 
 class Component(object):
     def __init__(self):
+        self.uuid = uuid.uuid4()
         self.config = None
         self.workspace = None
         self.starttime = None
         self.endtime = None
         self._generator = None
+        self._setaccess('uuid')
         self._setaccess('config')
         self._setaccess('name')
         self._setaccess('starttime')
@@ -86,7 +89,6 @@ class WorkloadState(Enum):
     COMPLETED = 2
     DELETED = 3
     ERROR = 4
-
 
 class Workload(Component):
     module_interfaces = [
