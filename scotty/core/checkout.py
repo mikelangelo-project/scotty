@@ -14,7 +14,7 @@ class CheckoutManager(object):
     def populate(cls, component, base_path):
         generator = component.generator
         if generator['type'] == "git":
-            cls.checkout(generator['location'], component.workspace, generator['referenc'])
+            cls.checkout(generator['location'], component.workspace, generator['reference'])
         elif generator['type'] == "file":
             cls.copy(component, generator['location'], base_path)
         else:
