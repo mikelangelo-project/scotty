@@ -36,3 +36,6 @@ class ExperimentHelper(object):
 
     def get_experiment_starttime(self):
         return self.__experiment.starttime
+
+    def get_experiment_uuid(self):
+        return self.__experiment.uuid
