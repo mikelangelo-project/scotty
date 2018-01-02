@@ -195,6 +195,11 @@ class ResultStore(Component):
         self.module = None
         self.parent_module_name = 'scotty.resultstore'
         self.state = CommonComponentState.PREPARE
+        self._setaccess('params')
+        
+    @property
+    def params(self):
+        return self.config['params']
 
     @property
     def module_path(self):
