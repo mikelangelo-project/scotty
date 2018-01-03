@@ -209,11 +209,13 @@ class ResultStore(Component):
 class ComponentValidator(object):
     @classmethod
     def validate_interfaces(cls, component):
+        pass
         for interface_ in component.module_interfaces:
             cls.validate_interface(component, interface_)
 
     @classmethod
     def validate_interface(cls, component, interface_):
+        pass
         try:
             getattr(component.module, interface_)
         except:
@@ -274,7 +276,6 @@ class ResourceFactory(ComponentFactory):
         resource = Resource()
         resource.config = resource_config
         resource.workspace = cls._get_component_workspace(experiment, resource)
-        resource.module = cls._get_component_module(experiment, resource)
         return resource
 
 class SystemCollectorFactory(ComponentFactory):
@@ -283,7 +284,6 @@ class SystemCollectorFactory(ComponentFactory):
         systemcollector = SystemCollector()
         systemcollector.config = systemcollector_config
         systemcollector.workspace = cls._get_component_workspace(experiment, systemcollector)
-        systemcollector.module = cls._get_component_module(experiment, systemcollector)
         return systemcollector
 
 class WorkloadFactory(ComponentFactory):
@@ -292,7 +292,6 @@ class WorkloadFactory(ComponentFactory):
         workload = Workload()
         workload.config = workload_config
         workload.workspace = cls._get_component_workspace(experiment, workload)
-        workload.module = cls._get_component_module(experiment, workload)
         return workload
 
 class ResultStoreFactory(ComponentFactory):
@@ -301,5 +300,4 @@ class ResultStoreFactory(ComponentFactory):
         resultstore = ResultStore()
         resultstore.config = resultstore_config
         resultstore.workspace = cls._get_component_workspace(experiment, resultstore)
-        resultstore.module = cls._get_component_module(experiment, resultstore)
         return resultstore
