@@ -35,7 +35,6 @@ class ComponentTask(object):
         self.interface_ = interface_
 
     def run(self):
-        logger.info('Execute {} {} for {}'.format(self.component.type, self.interface_, self.component.name))
         with self.experiment.workspace.cwd():
             context = Context(self.component, self.experiment)
             function_ = self._get_function()
@@ -71,19 +70,18 @@ class ComponentTask(object):
         msg = 'Error from customer {}.{}'.format(self.component.type, self.component.name)
         logger.exception(msg) 
 
-class ComponentExecutor(object):
+class ComponentExecutor(futures.ProcessPoolExecutor):
     def __init__(self):
-        #super(ComponentExecutor, self).__init__(4)
+        super(ComponentExecutor, self).__init__(max_workers=4)
         self._future_to_component = {}
 
     def submit(self, experiment, component, interface_, result_interface=None):
-        with futures.ProcessPoolExecutor() as executor:
-            future = executor.submit(
-                exec_component, 
-                experiment, 
-                component, 
-                interface_, 
-                result_interface)
+        future = super(ComponentExecutor, self).submit(
+            exec_component, 
+            experiment, 
+            component, 
+            interface_, 
+            result_interface)
         self._future_to_component[future] = component
  
     def wait(self):
