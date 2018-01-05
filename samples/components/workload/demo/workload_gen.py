@@ -20,5 +20,12 @@ def run(context):
     result = 'result'
     return result
 
+def collect(context):
+    logger.info('collect data from workload')
+#    workload_utils = utils.WorkloadUtils(context)
+#    with workload_utils.file_open('file', 'r') as f:
+#        f.write
+#    workload_utils.mkdir('path')
+
 def clean(context):
     pass

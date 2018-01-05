@@ -10,7 +10,7 @@ from scotty.core.components import WorkloadFactory
 from scotty.core.components import SystemCollectorFactory
 from scotty.core.components import ResultStoreFactory
 from scotty.core.executor import ResourceDeployExecutor, ResourceCleanExecutor
-from scotty.core.executor import WorkloadRunExecutor, WorkloadCleanExecutor
+from scotty.core.executor import WorkloadRunExecutor, WorkloadCollectExecutor, WorkloadCleanExecutor
 from scotty.core.executor import SystemCollectorCollectExecutor
 from scotty.core.executor import ResultStoreSubmitExecutor
 
@@ -100,6 +100,9 @@ class ExperimentPerformWorkflow(Workflow):
         workload_run_executor = WorkloadRunExecutor()
         workload_run_executor.submit_workloads(self.experiment)
         workload_run_executor.collect_results()
+        workload_collect_executor = WorkloadCollectExecutor()
+        workload_collect_executor.submit_workloads(self.experiment)
+        workload_collect_executor.wait()
 
     def _run_resultstores(self):
         logger.info('Run resultstore')

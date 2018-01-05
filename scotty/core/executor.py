@@ -113,6 +113,14 @@ class WorkloadRunExecutor(ComponentExecutor):
             self.copy_task_attributes(workload_future, workload, result_interface="result")
 
 
+class WorkloadCollectExecutor(ComponentExecutor):
+    def submit_workloads(self, experiment):
+        workloads = experiment.components['workload']
+        for workload in workloads.itervalues():
+            logger.info('Submit workload {}.collect(context)'.format(workload.name))
+            self.submit(experiment, workload, 'collect')
+
+
 class WorkloadCleanExecutor(ComponentExecutor):
     def submit_workloads(self, experiment):
         workloads = experiment.components['workload']
