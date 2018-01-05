@@ -49,6 +49,10 @@ class ExperimentWorkspace(Workspace):
         'workload',
         'resultstore'
     ]
+
+    data_components = [
+        'workload',
+    ]
     
     @property
     def config_path(self):
@@ -68,18 +72,27 @@ class ExperimentWorkspace(Workspace):
     def create_paths(self):
         self.create_base_paths()
         self.component_path = {}
+        self.component_data_path = {}
         map(self.create_component_path, self.supported_components) 
+        map(self.create_component_data_path, self.data_components)
 
     def create_base_paths(self):
         self.scotty_path = os.path.join(self.path, '.scotty')
         self.components_base_path = os.path.join(self.scotty_path, 'components')
+        self.components_data_base_path = os.path.join(self.scotty_path, 'data')
         self.create_path(self.scotty_path)
         self.create_path(self.components_base_path)
+        self.create_path(self.components_data_base_path)
 
     def create_component_path(self, component_type):
-        path = os.path.join(self.components_base_path, component_type)
-        self.create_path(path)
-        self.component_path[component_type] = path
+        component_path = os.path.join(self.components_base_path, component_type)
+        self.create_path(component_path)
+        self.component_path[component_type] = component_path
+
+    def create_component_data_path(self, component_type):
+        component_data_path = os.path.join(self.components_data_base_path, component_type)
+        self.create_path(component_data_path)
+        self.component_data_path[component_type] = component_data_path
 
     def create_path(self, path):
         if not os.path.isdir(path):
@@ -93,6 +106,16 @@ class ExperimentWorkspace(Workspace):
             return path
         else:
             msg = 'Component {} is not supported'
+            raise ExperimentException(msg.format(type(component)))
+
+    def get_component_data_path(self, component, create_on_demand=False):
+        if component.type in self.data_components:
+            path = os.path.join(self.component_data_path[component.type], component.name)
+            if create_on_demand:
+                self.create_path(path)
+            return path
+        else:
+            msg = 'Component {} is not supported for data'
             raise ExperimentException(msg.format(type(component)))
 
 

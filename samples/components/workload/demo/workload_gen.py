@@ -22,10 +22,10 @@ def run(context):
 
 def collect(context):
     logger.info('collect data from workload')
-#    workload_utils = utils.WorkloadUtils(context)
-#    with workload_utils.file_open('file', 'r') as f:
-#        f.write
-#    workload_utils.mkdir('path')
+    workload_utils = utils.WorkloadUtils(context)
+    with workload_utils.open_file('my_result_file.txt', 'a') as f:
+        f.write('result 1\n')
+        f.write('result 2\n')
 
 def clean(context):
     pass

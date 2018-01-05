@@ -39,3 +39,25 @@ class ExperimentHelper(object):
 
     def get_experiment_uuid(self):
         return self.__experiment.uuid
+
+
+class WorkloadUtils(object):
+    def __init__(self, context):
+        self.context = context
+        try:
+            self.current_workload = context.v1.workload
+        except KeyError as e:
+            logger.error('WorkloadUtils can only used in workload context')
+            raise
+        self.__experiment = context.v1._ContextV1__experiment
+        experiment_workspace = self.__experiment.workspace
+        self.component_data_path = experiment_workspace.get_component_data_path(self.current_workload, True)
+
+    def _real_path(self, file_):
+        file_ = os.path.basename(os.path.normpath(file_))
+        real_path = "{}/{}".format(self.component_data_path, file_)
+        return real_path
+
+    def open_file(self, file_, mode):
+        real_path = self._real_path(file_)
+        return open(real_path, mode)

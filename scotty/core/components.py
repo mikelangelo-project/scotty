@@ -39,6 +39,7 @@ class Component(object):
         self._setaccess('name')
         self._setaccess('starttime')
         self._setaccess('endtime')
+        self._setaccess('type')
 
     def _setaccess(self, parameter):
         ContextAccessible(self.__class__.__name__).setaccess(parameter)
