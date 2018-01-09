@@ -10,6 +10,27 @@ Add scotty to /usr/bin
 
     ln -s /path/to/scotty/scotty.py /usr/bin/scotty
 
+Configure
+-------------------
+
+configuration an found ./etc/scotty.conf. You can also add or copy this to /etc/scotty/scotty.conf. 
+
+### Resultstores
+
+#### Resultstores Basic
+
+You can declare a list of resultstores in the parameter stores in the section [resultstores]. Every item in stores must have its own section with detail informations
+
+    [resultstores]
+    stores = ["owncloud", etc]
+
+#### Resultstore Owncloud (example for detail information)
+
+    [owncloud]
+    enable = True
+    generator = git:git@gitlab.my.de:my/resourcestore/rsowncloud.git[master]
+    params = {"ocurl": "http://owncloud.my.de", "ocuser": "username", "ocpwd": "app-password"}
+
 Perform a experiment
 --------------------
     

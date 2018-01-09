@@ -67,15 +67,8 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _prepare_resultstores(self):
         logger.info('Prepare resultstores')
-        resultstore_configs = self.experiment.config.get('resultstores', [])
-        resultstores = map(self._prepare_resultstore, resultstore_configs)
+        resultstores = ResultStoreFactory.build_from_settings(self.experiment)
         map(self.experiment.add_component, resultstores)
-
-    def _prepare_resultstore(self, resultstore_config):
-        msg = 'Prepare resultstore {} ({})'
-        logger.info(msg.format(resultstore_config['name'], resultstore_config['generator']))
-        resultstore = ResultStoreFactory.build(resultstore_config, self.experiment)
-        return resultstore
 
     def _run(self):
         self._run_resources()

@@ -2,18 +2,8 @@ description: |
   "This is a example for an experiment definition in scotty
   The sections are
     - description
-    - tags
-    - environment
     - resources
     - workloads"
-tags:
-  - sample
-systemcollectors: 
-  - name: demo_systemcollector 
-    generator: file:systemcollector/demo
-resultstores: 
-  - name: demo_resultstore
-    generator: file:resultstore/demo
 resources:
   - name: demo_resource
     generator: file:resource/demo

@@ -14,6 +14,7 @@ from scotty.core.context import ContextAccessible
 from scotty.core.exceptions import ExperimentException
 from scotty.core.exceptions import ScottyException
 from scotty.core.workspace import Workspace, ExperimentWorkspace
+from scotty.core import settings
 
 logger = logging.getLogger(__name__)
 
@@ -302,3 +303,19 @@ class ResultStoreFactory(ComponentFactory):
         resultstore.config = resultstore_config
         resultstore.workspace = cls._get_component_workspace(experiment, resultstore)
         return resultstore
+
+    @classmethod
+    def build_from_settings(cls, experiment):
+        resultstores = []
+        setting_resultstores = settings.get('resultstores', 'stores')
+        for setting_resultstore in setting_resultstores:
+            enable = settings.get(setting_resultstore, 'enable')
+            if not enable:
+                continue 
+            resultstore_config = {}
+            resultstore_config['name'] = setting_resultstore
+            resultstore_config['generator'] = settings.get(setting_resultstore, 'generator')
+            resultstore_config['params'] = settings.get(setting_resultstore, 'params')
+            resultstore = cls.build(resultstore_config, experiment)
+            resultstores.append(resultstore)
+        return resultstores
