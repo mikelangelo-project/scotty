@@ -41,7 +41,8 @@ class PerformParser(CommandParser):
             '-c', '--config',
             help='Path to experiment config',
             dest='config',
-            action='store')
+            action='store',
+            default=None)
         parser.add_argument(
             '-m', '--mock',
             help='Do not run the workloads',
