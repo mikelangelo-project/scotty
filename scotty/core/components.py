@@ -81,9 +81,22 @@ class Component(object):
 
     @property
     def type(self):
-        type_ = self.__class__.__name__
-        return type_.lower()
+        type_ = self.__class__.identifier()
+        return type_
 
+    @classmethod
+    def identifier(cls, plural=False):
+        identifier = cls.__name__
+        if plural:
+            identifier = "{}s".format(identifier)
+        identifier = identifier.lower()
+        return identifier
+
+    @classmethod
+    def factory(cls):
+        component_factory_str = "{}Factory".format(cls.__name__)
+        component_factory = getattr(sys.modules[__name__], component_factory_str)
+        return component_factory
 
 class WorkloadState(Enum):
     PREPARE = 0
@@ -240,22 +253,40 @@ class ComponentFactory(object):
         module_ =  ModuleLoader.load_by_component(component)
         return module_
 
+    @classmethod
+    def _build_from_experiment(cls, experiment, component_class):
+        component_configs = experiment.config.get(component_class.identifier(True), [])
+        component_factory = component_class.factory()
+        build = lambda component_config: component_factory.build(component_config, experiment)
+        components = map(build, component_configs)
+        return components
+        
+
 class ExperimentFactory(ComponentFactory):
     yaml_pattern_env = re.compile(r'\<%=\s*ENV\[\'([^\]\s]+)\'\]\s*%\>')
     @classmethod
-    def build(cls, options):
+    def build(cls, workspace_path, cfg_path=None):
         experiment = Experiment()
-        experiment.workspace = Workspace.factory(experiment, options.workspace, True)
-        experiment.workspace.config_path = cls._get_experiment_config_path(experiment, options)
+        experiment.workspace = Workspace.factory(experiment, workspace_path, True)
+        experiment.workspace.config_path = cls._get_experiment_config_path(experiment, cfg_path)
         experiment.config = cls._get_experiment_config(experiment)
+        cls._build_components(experiment)
         return experiment
 
     @classmethod
-    def _get_experiment_config_path(cls, experiment, options):
-        config = ''
-        if hasattr(options, 'config'):
-            config = options.config
-        config_path = config or experiment.workspace.config_path
+    def _build_components(cls, experiment):
+        resources = cls._build_from_experiment(experiment, Resource)
+        workloads = cls._build_from_experiment(experiment, Workload)
+        systemcollectors = cls._build_from_experiment(experiment, SystemCollector)
+        resultstores = ResultStoreFactory.build_from_settings(experiment)
+        map(experiment.add_component, resources)
+        map(experiment.add_component, workloads)
+        map(experiment.add_component, systemcollectors)
+        map(experiment.add_component, resultstores)
+
+    @classmethod
+    def _get_experiment_config_path(cls, experiment, config_path):
+        config_path = config_path or experiment.workspace.config_path
         return config_path
 
     @classmethod
@@ -275,6 +306,7 @@ class ExperimentFactory(ComponentFactory):
 class ResourceFactory(ComponentFactory):
     @classmethod
     def build(cls, resource_config, experiment):
+        logger.info("Build Resource")
         resource = Resource()
         resource.config = resource_config
         resource.workspace = cls._get_component_workspace(experiment, resource)

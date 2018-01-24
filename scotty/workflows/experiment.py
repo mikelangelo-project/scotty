@@ -18,57 +18,9 @@ logger = logging.getLogger(__name__)
 
 class ExperimentPerformWorkflow(Workflow):
     def _prepare(self):
-        self._prepare_experiment()
-        self._prepare_resources()
-        self._prepare_systemcollectors()
-        self._prepare_workloads()
-        self._prepare_resultstores()
-
-    def _prepare_experiment(self):
         logger.info('Prepare experiment')
-        self.experiment = ExperimentFactory.build(self._options)
+        self.experiment = ExperimentFactory.build(self._options.workspace, self._options.config)
         self.experiment.starttime = datetime.now()
-
-    def _prepare_resources(self):
-        logger.info('Prepare resources')
-        resource_configs = self.experiment.config.get('resources', [])
-        resources = map(self._prepare_resource, resource_configs)
-        map(self.experiment.add_component, resources)
-
-    def _prepare_resource(self, resource_config):
-        msg = 'Prepare resource {} ({})'
-        logger.info(msg.format(resource_config['name'], resource_config['generator']))
-        resource = ResourceFactory.build(resource_config, self.experiment)
-        return resource
-                                                     
-    def _prepare_systemcollectors(self):
-        logger.info('Prepare systemcollectors')
-        systemcollector_configs = self.experiment.config.get('systemcollectors', [])
-        systemcollectors = map(self._prepare_systemcollector, systemcollector_configs)
-        map(self.experiment.add_component, systemcollectors)
-
-    def _prepare_systemcollector(self, systemcollector_config):
-        msg = 'Prepare systemcollector {} ({})'
-        logger.info(msg.format(systemcollector_config['name'], systemcollector_config['generator']))
-        systemcollector = SystemCollectorFactory.build(systemcollector_config, self.experiment)
-        return systemcollector
-
-    def _prepare_workloads(self):
-        logger.info('Prepare workloads')
-        workload_configs = self.experiment.config.get('workloads', [])
-        workloads = map(self._prepare_workload, workload_configs)
-        map(self.experiment.add_component, workloads)
-
-    def _prepare_workload(self, workload_config):
-        msg = 'Prepare workload {} ({})'
-        logger.info(msg.format(workload_config['name'], workload_config['generator']))
-        workload = WorkloadFactory.build(workload_config, self.experiment)
-        return workload
-
-    def _prepare_resultstores(self):
-        logger.info('Prepare resultstores')
-        resultstores = ResultStoreFactory.build_from_settings(self.experiment)
-        map(self.experiment.add_component, resultstores)
 
     def _run(self):
         self._run_resources()
