@@ -78,7 +78,7 @@ class ExperimentPerformWorkflow(Workflow):
 
 class ExperimentCleanWorkflow(Workflow):
     def _prepare(self):
-        self.experiment = ExperimentFactory.build(self._options)
+        self.experiment = ExperimentFactory.build(self._options.workspace)
 
     def _run(self):
         msg = ('Delete scotty path ({})')

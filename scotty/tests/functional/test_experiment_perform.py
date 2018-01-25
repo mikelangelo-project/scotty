@@ -15,6 +15,7 @@ class PerformExperimentTest(unittest.TestCase):
     experiment_tmp_path = os.path.join(experiment_tmp_path_root, experiment_samples_path)
 
     def setUp(self):
+        print "Current Dir: {}".format(os.getcwd())
         if os.path.isdir(self.experiment_tmp_path):
             shutil.rmtree(self.experiment_tmp_path)
         shutil.copytree(self.experiment_samples_path, self.experiment_tmp_path)
@@ -47,8 +48,10 @@ class PerformExperimentTest(unittest.TestCase):
     def cwd(self, path):
         prev_cwd = os.getcwd()
         os.chdir(path)
-        yield
-        os.chdir(prev_cwd)
+        try:
+            yield
+        finally:
+            os.chdir(prev_cwd)
 
     def run_cmd(self):
         with self.cwd(self.experiment_tmp_path):

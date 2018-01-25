@@ -47,8 +47,10 @@ class PerformExperimentParallelTest(unittest.TestCase):
     def cwd(self, path):
         prev_cwd = os.getcwd()
         os.chdir(path)
-        yield
-        os.chdir(prev_cwd)
+        try:
+            yield
+        finally:
+            os.chdir(prev_cwd)
 
     def run_cmd(self):
         with self.cwd(self.experiment_tmp_path):
