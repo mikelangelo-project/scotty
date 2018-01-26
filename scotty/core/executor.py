@@ -31,10 +31,19 @@ class ComponentTask(object):
         CheckoutManager.populate(component, experiment.workspace.path)
         self.experiment = experiment
         self.component = component
-        self.component_module =  ModuleLoader.load_by_component(component)
+        self.component_module =  self.load_module(component)
         self.interface_ = interface_
 
+    def load_module(self, component):
+        try:
+            component_module =  ModuleLoader.load_by_component(component)
+            return component_module
+        except:
+            self._log_component_exception()
+
     def run(self):
+        if not self.component_module:
+            return
         with self.experiment.workspace.cwd():
             context = Context(self.component, self.experiment)
             function_ = self._get_function()
