@@ -16,6 +16,10 @@ class BaseUtils(object):
     def experiment_uuid(self):
         return self.__experiment.uuid
 
+    @property
+    def experiment_workspace(self):
+        return self._BaseUtils__experiment.workspace
+
 class ExperimentHelper(object):
     def __init__(self, context):
         # TODO validate context - is from scotty and not a fake from customer component
@@ -58,8 +62,9 @@ class WorkloadUtils(BaseUtils):
         except KeyError as e:
             logger.error('WorkloadUtils can only used in workload context')
             raise
-        experiment_workspace = self._BaseUtils__experiment.workspace
-        self.component_data_path = experiment_workspace.get_component_data_path(self.current_workload, True)
+        self.component_data_path = self.experiment_workspace.get_component_data_path(
+            self.current_workload, 
+            True)
 
     def _real_path(self, file_):
         file_ = os.path.basename(os.path.normpath(file_))
@@ -69,6 +74,17 @@ class WorkloadUtils(BaseUtils):
     def open_file(self, file_, mode):
         real_path = self._real_path(file_)
         return open(real_path, mode)
+
+
+class ResourceUtils(BaseUtils):
+    def __init__(self, context):
+        super(ResourceUtils, self).__init__(context)
+        try:
+            self.current_resource = context.v1.resource
+        except KeyError as e:
+            logger.error('ResourceUtils can only used in reource context')
+            raise
+
 
 class ResultstoreUtils(BaseUtils):
     def __init__(self, context):
