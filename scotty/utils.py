@@ -1,6 +1,12 @@
 import logging
 import os
+from time import sleep 
 from contextlib import contextmanager
+
+import keystoneauth1.loading
+import keystoneauth1.session
+import heatclient.client
+from heatclient.common import template_utils
 
 from scotty.core.exceptions import ScottyException
 
@@ -85,6 +91,12 @@ class ResourceUtils(BaseUtils):
             logger.error('ResourceUtils can only used in reource context')
             raise
 
+    @property
+    def heat_client(self):
+        if not self._heat_client:
+            self._heat_client = HeatClient()
+        return self._heat_client
+
 
 class ResultstoreUtils(BaseUtils):
     def __init__(self, context):
@@ -112,3 +124,45 @@ class ResultstoreUtils(BaseUtils):
     def local_result_dir(self, workload_name):
         local_result_dir = os.path.join('.scotty/data/workload', workload_name)
         return local_result_dir
+
+
+class HeatClient(object):
+    def __init__(self, session):
+        self._heat = heatclient.client.Client('1', session=session)
+
+    def create_stack(self, tpl_path, stack_name, params):
+        stack_args = self._create_stack_args(tpl_path, stack_name, params)
+        self._heat.stacks.create(**stack_args)
+
+    def _create_stack_args(self, tpl_path, stack_name, params):
+        tpl_files, tpl = template_utils.get_template_contents(tpl_path)
+        args = {
+            'stack_name':stack_name,
+            'template':tpl,
+            'files':tpl_files,
+            'parameters': params,
+        }
+        return args
+
+    def delete_stack(self, stack_name):
+        self._heat.stacks.delete(stack_name)
+
+    def wait_for_stack(self, stack_name, state_finish="CREATE_COMPLETE", state_error="CREATE_FAILED"):
+        while True:
+            logger.info('Wait for stack {}'.format(stack_name))
+            sleep(5)
+            stack = self._heat.stacks.get(stack_name)
+            if stack.stack_status == state_finish:
+                return
+            if stack.stack_status == state_error:
+                raise Exception('Stack failed')
+
+    def get_stack(self, stack_name):
+        stack = self._heat.stacks.get(stack_name)
+        return stack
+
+    def parse_outputs(self, stack):
+        outputs = {}
+        for output in stack.outputs:
+            outputs[output['output_key']] = output['output_value']
+        return outputs
