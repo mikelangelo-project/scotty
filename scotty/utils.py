@@ -71,6 +71,7 @@ class WorkloadUtils(BaseUtils):
         self.component_data_path = self.experiment_workspace.get_component_data_path(
             self.current_workload, 
             True)
+        self._resources = {}
 
     def _real_path(self, file_):
         file_ = os.path.basename(os.path.normpath(file_))
@@ -80,6 +81,20 @@ class WorkloadUtils(BaseUtils):
     def open_file(self, file_, mode):
         real_path = self._real_path(file_)
         return open(real_path, mode)
+
+    @property
+    def resources(self):
+        if not self._resources:
+            workload_resources = self.current_workload.resources
+            resource_components = self._BaseUtils__experiment.components['resource'] 
+            for resource_key in workload_resources:
+                resource_name = workload_resources[resource_key] 
+                resource_component = resource_components.get(resource_name, None)
+                if not resource_components:
+                    msg = 'Can not find resource ({})'.format(resource_name)
+                    raise ScottyException(msg)
+                self._resources[resource_key] = resource_component
+        return self._resources
 
 
 class ResourceUtils(BaseUtils):
