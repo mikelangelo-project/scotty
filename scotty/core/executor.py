@@ -28,15 +28,21 @@ def exec_component(experiment, component, interface_, result_interface):
 
 class ComponentTask(object):
     def __init__(self, experiment, component, interface_):
-        CheckoutManager.populate(component, experiment.workspace.path)
         self.experiment = experiment
         self.component = component
-        self.component_module =  self.load_module(component)
         self.interface_ = interface_
+        self.populate_component()
+        self.component_module =  self.load_component_module()
 
-    def load_module(self, component):
+    def populate_component(self):
         try:
-            component_module =  ModuleLoader.load_by_component(component)
+            CheckoutManager.populate(self.component, self.experiment.workspace.path)
+        except:
+            self._log_component_exception()
+
+    def load_component_module(self):
+        try:
+            component_module =  ModuleLoader.load_by_component(self.component)
             return component_module
         except:
             self._log_component_exception()
