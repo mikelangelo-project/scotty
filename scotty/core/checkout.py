@@ -69,6 +69,6 @@ class CheckoutManager(object):
     def _init_submodules(cls, workspace, repo):
         if os.path.isfile('{path}/.gitmodules'.format(path=workspace.path)):
             print 'foo'
-            repo.git.submodules('init')
-            repo.git.submodules('sync')
-            repo.git.submodules('update', '--init')
+            repo.git.submodule('init')
+            repo.git.submodule('sync')
+            repo.git.submodule('update', '--init')
