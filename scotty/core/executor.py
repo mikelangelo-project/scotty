@@ -86,14 +86,15 @@ class ComponentTask(object):
         logger.exception(msg) 
 
 class ComponentExecutor(futures.ProcessPoolExecutor):
-    def __init__(self):
+    def __init__(self, experiment):
         super(ComponentExecutor, self).__init__(max_workers=4)
         self._future_to_component = {}
+        self.experiment = experiment
 
-    def submit(self, experiment, component, interface_, result_interface=None):
+    def submit(self, component, interface_, result_interface=None):
         future = super(ComponentExecutor, self).submit(
             exec_component, 
-            experiment, 
+            self.experiment, 
             component, 
             interface_, 
             result_interface)
@@ -113,78 +114,85 @@ class ComponentExecutor(futures.ProcessPoolExecutor):
             result = getattr(source_component, result_interface)
             setattr(target_component, result_interface, result)
 
+    def check_error(self, component):
+        if component.state == CommonComponentState.ERROR:
+            self.experiment.state = CommonComponentState.ERROR
+
 
 class WorkloadRunExecutor(ComponentExecutor):
-    def submit_workloads(self, experiment):
-        workloads = experiment.components['workload']
+    def submit_workloads(self):
+        workloads = self.experiment.components['workload']
         for workload in workloads.itervalues():
             logger.info('Submit workload {}.run(context)'.format(workload.name))
-            self.submit(experiment, workload, 'run', result_interface="result")
+            self.submit(workload, 'run', result_interface="result")
 
     def collect_results(self):
         for future in futures.as_completed(self._future_to_component):
             workload = self._future_to_component[future]
             workload_future = future.result()
             self.copy_task_attributes(workload_future, workload, result_interface="result")
+            self.check_error(workload)
 
 
 class WorkloadCollectExecutor(ComponentExecutor):
-    def submit_workloads(self, experiment):
-        workloads = experiment.components['workload']
+    def submit_workloads(self):
+        workloads = self.experiment.components['workload']
         for workload in workloads.itervalues():
             logger.info('Submit workload {}.collect(context)'.format(workload.name))
-            self.submit(experiment, workload, 'collect')
+            self.submit(workload, 'collect')
 
 
 class WorkloadCleanExecutor(ComponentExecutor):
-    def submit_workloads(self, experiment):
-        workloads = experiment.components['workload']
+    def submit_workloads(self):
+        workloads = self.experiment.components['workload']
         for workload in workloads.itervalues():
             logger.info('Submit workload {}.clean(context)'.format(workload.name))
-            self.submit(experiment, workload, 'clean')
+            self.submit(workload, 'clean')
 
 
 class ResourceDeployExecutor(ComponentExecutor):
-    def submit_resources(self, experiment):
-        resources = experiment.components['resource']
+    def submit_resources(self):
+        resources = self.experiment.components['resource']
         for resource in resources.itervalues():
             logger.info('Submit resource {}.deploy(context)'.format(resource.name))
-            self.submit(experiment, resource, 'deploy', result_interface="endpoint")
+            self.submit(resource, 'deploy', result_interface="endpoint")
 
     def collect_endpoints(self):
         for future in futures.as_completed(self._future_to_component):
             resource = self._future_to_component[future]
             resource_future = future.result()
             self.copy_task_attributes(resource_future, resource, result_interface="endpoint")
+            self.check_error(resource)
 
 
 class ResourceCleanExecutor(ComponentExecutor):
-    def submit_resources(self, experiment):
-        resources = experiment.components['resource']
+    def submit_resources(self):
+        resources = self.experiment.components['resource']
         for resource in resources.itervalues():
             logger.info('Submit resource {}.clean(context)'.format(resource.name))
-            self.submit(experiment, resource, 'clean')
+            self.submit(resource, 'clean')
 
 
 class SystemCollectorCollectExecutor(ComponentExecutor):
-    def submit_systemcollectors(self, experiment):
-        systemcollectors = experiment.components['systemcollector']
+    def submit_systemcollectors(self):
+        systemcollectors = self.experiment.components['systemcollector']
         for systemcollector in systemcollectors.itervalues():
             msg = 'Submit systemcollector {}.collect(context)'
             logger.info(msg.format(systemcollector.name))
-            self.submit(experiment, systemcollector, 'collect', result_interface="result")
+            self.submit(systemcollector, 'collect', result_interface="result")
 
     def collect_results(self):
         for future in futures.as_completed(self._future_to_component):
             systemcollector = self._future_to_component[future]
             systemcollector_future = future.result()
             self.copy_task_attributes(systemcollector_future, systemcollector, result_interface="result")
+            self.check_error(systemcollector)
 
 
 class ResultStoreSubmitExecutor(ComponentExecutor):
-    def submit_resultstores(self, experiment):
-        resultstores = experiment.components['resultstore']
+    def submit_resultstores(self):
+        resultstores = self.experiment.components['resultstore']
         for resultstore in resultstores.itervalues():
             msg = 'Submit resultstore {}.submit(context)'
             logger.info(msg.format(resultstore.name))
-            self.submit(experiment, resultstore, 'submit')
+            self.submit(resultstore, 'submit')

@@ -32,8 +32,8 @@ class WorkloadExecutorTest(unittest.TestCase):
         workloads_mock['workload_2'] = mock.Mock()
         experiment_mock.components = {}
         experiment_mock.components['workload'] = workloads_mock
-        workload_run_executor = WorkloadRunExecutor()
-        workload_run_executor.submit_workloads(experiment_mock)
+        workload_run_executor = WorkloadRunExecutor(experiment_mock)
+        workload_run_executor.submit_workloads()
         submit_mock.assert_called()
 
     def test_collect_results(self):
@@ -49,6 +49,6 @@ class ResourceDeployExecutorTest(unittest.TestCase):
         resources_mock['resource_2'] = mock.Mock()
         experiment_mock.components = {}
         experiment_mock.components['resource'] = resources_mock
-        resource_deploy_executor = ResourceDeployExecutor()
-        resource_deploy_executor.submit_resources(experiment_mock)
+        resource_deploy_executor = ResourceDeployExecutor(experiment_mock)
+        resource_deploy_executor.submit_resources()
         submit_mock.assert_called()

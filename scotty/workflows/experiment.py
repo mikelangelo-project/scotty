@@ -30,33 +30,35 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run_resources(self):
         logger.info('Deploy resources')
-        resource_deploy_executor = ResourceDeployExecutor()
-        resource_deploy_executor.submit_resources(self.experiment)
+        resource_deploy_executor = ResourceDeployExecutor(self.experiment)
+        resource_deploy_executor.submit_resources()
         resource_deploy_executor.collect_endpoints()
 
     def _run_systemcollectors(self):
-        logger.info('Run systemcollectors')
         if self.experiment.has_errors():
+            logger.info('Skip systemcollectors - something went wrong before')
             return
-        systemcollector_collect_executor = SystemCollectorCollectExecutor()
-        systemcollector_collect_executor.submit_systemcollectors(self.experiment)
+        logger.info('Run systemcollectors')
+        systemcollector_collect_executor = SystemCollectorCollectExecutor(self.experiment)
+        systemcollector_collect_executor.submit_systemcollectors()
         systemcollector_collect_executor.wait()
 
     def _run_workloads(self):
-        logger.info('Run workloads')
         if self.experiment.has_errors():
+            logger.info('Skip workloads - something went wrong before')
             return
-        workload_run_executor = WorkloadRunExecutor()
-        workload_run_executor.submit_workloads(self.experiment)
+        logger.info('Run workloads')
+        workload_run_executor = WorkloadRunExecutor(self.experiment)
+        workload_run_executor.submit_workloads()
         workload_run_executor.collect_results()
-        workload_collect_executor = WorkloadCollectExecutor()
-        workload_collect_executor.submit_workloads(self.experiment)
+        workload_collect_executor = WorkloadCollectExecutor(self.experiment)
+        workload_collect_executor.submit_workloads()
         workload_collect_executor.wait()
 
     def _run_resultstores(self):
         logger.info('Run resultstore')
-        resultstore_submit_executor = ResultStoreSubmitExecutor()
-        resultstore_submit_executor.submit_resultstores(self.experiment)
+        resultstore_submit_executor = ResultStoreSubmitExecutor(self.experiment)
+        resultstore_submit_executor.submit_resultstores()
         resultstore_submit_executor.wait()
 
     def _clean(self):
@@ -66,14 +68,14 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _clean_workloads(self):
         logger.info('Clean workloads')
-        workload_clean_executor = WorkloadCleanExecutor()
-        workload_clean_executor.submit_workloads(self.experiment)
+        workload_clean_executor = WorkloadCleanExecutor(self.experiment)
+        workload_clean_executor.submit_workloads()
         workload_clean_executor.wait()
 
     def _clean_resources(self):
         logger.info('Clean resources')
-        resources_clean_executor = ResourceCleanExecutor()
-        resources_clean_executor.submit_resources(self.experiment)
+        resources_clean_executor = ResourceCleanExecutor(self.experiment)
+        resources_clean_executor.submit_resources()
         resources_clean_executor.wait()
 
     def _clean_experiment(self):
