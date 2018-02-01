@@ -165,12 +165,12 @@ class HeatClient(object):
     def wait_for_stack(self, stack_name, state_finish="CREATE_COMPLETE", state_error="CREATE_FAILED"):
         while True:
             logger.info('Wait for stack {}'.format(stack_name))
-            sleep(5)
             stack = self._heat.stacks.get(stack_name)
             if stack.stack_status == state_finish:
                 return
             if stack.stack_status == state_error:
                 raise Exception('Stack failed')
+            sleep(20)
 
     def get_stack(self, stack_name):
         stack = self._heat.stacks.get(stack_name)
