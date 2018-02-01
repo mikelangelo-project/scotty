@@ -36,12 +36,16 @@ class ExperimentPerformWorkflow(Workflow):
 
     def _run_systemcollectors(self):
         logger.info('Run systemcollectors')
+        if self.experiment.has_errors():
+            return
         systemcollector_collect_executor = SystemCollectorCollectExecutor()
         systemcollector_collect_executor.submit_systemcollectors(self.experiment)
         systemcollector_collect_executor.wait()
 
     def _run_workloads(self):
         logger.info('Run workloads')
+        if self.experiment.has_errors():
+            return
         workload_run_executor = WorkloadRunExecutor()
         workload_run_executor.submit_workloads(self.experiment)
         workload_run_executor.collect_results()
